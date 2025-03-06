@@ -45,8 +45,8 @@ const MenuItemComponent: React.FC<{
                     },
                 }}
                 onClick={hasChildren ? () => setOpen(!open) : undefined}
-                component={(Link as React.ElementType)} // 無子項時作為鏈接
-                to={hasChildren ? undefined : `/${item.path}`} // 有子項時不設鏈接
+                component={(Link as React.ElementType)} // 無子項時作為Link
+                to={hasChildren ? undefined : `/${item.path}`} // 有子項時不設Link
                 selected={!!isActive || isInclude}
             >
                 <ListItemIcon>{item.icon}</ListItemIcon>

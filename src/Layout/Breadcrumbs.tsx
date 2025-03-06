@@ -11,15 +11,14 @@ const Breadcrumbs = () => {
     const location = useLocation();
     const pathnames = location.pathname.split("/").filter(x => x);
 
-    const findParentPath = (list: MenuItem[], target: string, path: MenuItem[] = []): MenuItem[] => {
-        for (const item of list) {
+    const findParentPath = (menuItemArr: MenuItem[], target: string, path: MenuItem[] = []): MenuItem[] => {
+        for (const item of menuItemArr) {
             const currentPath = [...path, item]
             if (item.path === target) return currentPath;
             if (!!item.children && item.children.length > 0) {
                 const result = findParentPath(item.children, target, currentPath)
-                if (result) return result;
+                if (result.length > 0) return result;
             }
-
         }
         return [];
     }
@@ -27,15 +26,15 @@ const Breadcrumbs = () => {
     useEffect(() => {
         const pathList = () => {
             // 確保pathnames路徑長度大於0
-            if (!!pathnames && pathnames.length >= 1) return findParentPath(list, pathnames[pathnames.length - 1]);
+            if (!!pathnames && pathnames.length > 0) return findParentPath(list, pathnames[pathnames.length - 1]);
             return []
         };
         setpathList(pathList);
-
+       
         return () => {
 
         }
-    }, [])
+    }, [location.pathname])
 
 
 

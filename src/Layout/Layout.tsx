@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState } from 'react';
 import { styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
@@ -17,6 +17,7 @@ import Footer from './Footer'
 import SideBarMenu from './SideBarMenu';
 import Breadcrumbs from './Breadcrumbs';
 import { Link } from 'react-router-dom';
+import { Grid2 } from '@mui/material';
 
 const drawerWidth: number = 240;
 
@@ -76,7 +77,8 @@ export default function Dashboard(
   }
 ) {
 
-  const [open, setOpen] = React.useState<boolean>(true);
+  const [open, setOpen] = useState<boolean>(true);
+
   // const [windowWidth, setWindowWidth] = React.useState(0);
 
   // const handleResize = () => {
@@ -104,57 +106,67 @@ export default function Dashboard(
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <AppBar position="absolute" open={open}>
-        <Toolbar
-          sx={{
-            pr: '24px', // keep right padding when drawer closed
-          }}
-        >
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            onClick={toggleDrawer}
+      <Box sx={{ maxHeight: '100vh', display: 'flex' }}>
+        <AppBar position="absolute" open={open}>
+          <Toolbar
             sx={{
-              marginRight: '36px',
-              ...(open && { display: 'none' }),
+              pr: '24px', // keep right padding when drawer closed
             }}
           >
-            <IoMdMenu />
-          </IconButton>
-          <Typography
-            component="h1"
-            variant="h6"
-            color="inherit"
-            noWrap
-            sx={{ flexGrow: 1 }}
-          >
-            <Link to="/">Ka特販</Link>
-          </Typography>
-          <IconButton color="inherit" href='/#' target="_blank">
-            <FaGithub />
-          </IconButton>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="open drawer"
+              onClick={toggleDrawer}
+              sx={{
+                marginRight: '36px',
+                ...(open && { display: 'none' }),
+              }}
+            >
+              <IoMdMenu />
+            </IconButton>
+            <Typography
+              component="h1"
+              variant="h6"
+              color="inherit"
+              noWrap
+              sx={{ flexGrow: 1 }}
+            >
+              <Link to="/">Ka特販</Link>
+            </Typography>
+            <IconButton color="inherit" href='/#' target="_blank">
+              <FaGithub />
+            </IconButton>
 
-        </Toolbar>
-      </AppBar>
-      <Drawer variant="permanent" open={open}>
-        <Toolbar
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            px: [1],
-          }}
-        >
-          <IconButton onClick={toggleDrawer}>
-            <FaChevronLeft />
-          </IconButton>
-        </Toolbar>
-        <Divider />
-        <List component="nav">
-          <SideBarMenu></SideBarMenu>
-        </List>
-      </Drawer>
+          </Toolbar>
+        </AppBar>
+        <Drawer variant="permanent" sx={{}} open={open}>
+          <Toolbar
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              px: [1],
+            }}
+          >
+            <IconButton onClick={toggleDrawer}>
+              <FaChevronLeft />
+            </IconButton>
+          </Toolbar>
+          <Divider />
+          <List component="nav"
+            sx={{
+              overflowY: 'auto',
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // IE 和 Edge
+              '&::-webkit-scrollbar': {
+                display: 'none', // Chrome, Safari, Opera
+              },
+            }}>
+            <SideBarMenu></SideBarMenu>
+          </List>
+        </Drawer>
+      </Box>
       <Box
         component="main"
         sx={{
@@ -164,13 +176,29 @@ export default function Dashboard(
               : theme.palette.grey[900],
           flexGrow: 1,
           height: '100vh',
-          overflow: 'auto',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Toolbar /> {/* 縮排用 */}
-        <Breadcrumbs></Breadcrumbs> {/* 麵包屑 */}
-        <Container maxWidth={false} sx={{ mt: 2, mb: 2 }}>
-          {children}
+        <Breadcrumbs /> {/* 麵包屑 */}
+        <Container maxWidth={false} sx={{ height: '100%', marginBottom: 20, }}>
+          <Box sx={{
+            boxShadow: 3,
+            border: '1px solid #e0e0e0',
+            borderRadius: 1,
+            p: 2,
+            bgcolor: '#fafafa',
+            '&:hover': {
+              borderColor: '#1976d2',
+            },
+          }}>
+            <Grid2 container spacing={3} sx={{ mb: 4 }}>
+              {children}
+            </Grid2>
+          </Box>
           <Footer />
         </Container>
       </Box>

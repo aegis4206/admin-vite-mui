@@ -3,7 +3,7 @@ import Link from '@mui/material/Link';
 
 const Copyright = () => {
     return (
-        <Typography variant="body2" color="text.secondary" align="center">
+        <Typography component='div' variant="body2" color="text.secondary" align="center" sx={{padding:"10px"}} >
             {'Copyright © '}
             {new Date().getFullYear()}
             {' '}

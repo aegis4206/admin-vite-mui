@@ -1,6 +1,3 @@
-import {
-    List,
-} from "@mui/material";
 import React from "react";
 import MenuItemComponent from "./MenuItem";
 import { useAtom } from "jotai";
@@ -13,11 +10,9 @@ const SideBarMenu = () => {
 
     return (
         <>
-            <List component="div" >
-                {list.map((item: MenuItem, index: number) => (
-                    <MenuItemComponent key={index} item={item} level={0} />
-                ))}
-            </List>
+            {list.map((item: MenuItem, index: number) => (
+                <MenuItemComponent key={index} item={item} level={0} />
+            ))}
         </>
     );
 };

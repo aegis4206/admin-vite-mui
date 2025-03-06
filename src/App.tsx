@@ -33,7 +33,7 @@ export default function App() {
     }
   }, [])
 
-  
+
 
 
   return (
@@ -41,8 +41,8 @@ export default function App() {
       <CssBaseline></CssBaseline>
       <Layout>
         <Routes>
-          <Route path='/' element={<></>}></Route>
-          {routesList.map(route => route.pageNode ? <Route path={route.path} element={route.pageNode} key={route.path} /> : null)}
+          <Route path='/' element={<>首頁</>}></Route>
+          {routesList.map(route => <Route path={route.path} element={route.pageNode ? route.pageNode : <div>{route.name}</div>} key={route.path} />)}
         </Routes>
       </Layout>
     </>
