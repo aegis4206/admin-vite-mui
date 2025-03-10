@@ -30,7 +30,7 @@ const Breadcrumbs = () => {
             return []
         };
         setpathList(pathList);
-       
+
         return () => {
 
         }
@@ -42,15 +42,14 @@ const Breadcrumbs = () => {
     return (
         <Box sx={{ p: 2 }}>
             <MuiBreadcrumbs aria-label="breadcrumb">
-                <Link to="/">Home</Link>
+                <Link to="/" className="text-sky-700">Home</Link>
                 {pathList.map((item, index) => {
                     const nolink = (index === pathnames.length - 1) || item.path === "";
                     const to = `/${pathnames.slice(0, index + 1).join("/")}`;
-
                     return nolink ? (
                         <span key={to}>{item.name}</span>
                     ) : (
-                        <Link key={to} to={to}>
+                        <Link key={to} to={to} className="text-sky-700" >
                             {item.name}
                         </Link>
                     );

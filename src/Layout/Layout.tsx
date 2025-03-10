@@ -17,7 +17,10 @@ import Footer from './Footer'
 import SideBarMenu from './SideBarMenu';
 import Breadcrumbs from './Breadcrumbs';
 import { Link } from 'react-router-dom';
-import { Grid2 } from '@mui/material';
+import { Backdrop, CircularProgress, Grid2 } from '@mui/material';
+import Snackbars from '../components/snackbar';
+import { loadingAtom } from '../states/global';
+import { useAtom } from "jotai";
 
 const drawerWidth: number = 240;
 
@@ -78,6 +81,8 @@ export default function Dashboard(
 ) {
 
   const [open, setOpen] = useState<boolean>(true);
+  const [loading,] = useAtom(loadingAtom);
+
 
   // const [windowWidth, setWindowWidth] = React.useState(0);
 
@@ -184,7 +189,7 @@ export default function Dashboard(
       >
         <Toolbar /> {/* 縮排用 */}
         <Breadcrumbs /> {/* 麵包屑 */}
-        <Container maxWidth={false} sx={{ height: '100%', marginBottom: 20, }}>
+        <Container maxWidth={false} sx={{ height: '100%', }}>
           <Box sx={{
             boxShadow: 3,
             border: '1px solid #e0e0e0',
@@ -195,13 +200,20 @@ export default function Dashboard(
               borderColor: '#1976d2',
             },
           }}>
-            <Grid2 container spacing={3} sx={{ mb: 4 }}>
+            <Grid2 container spacing={1} sx={{ mb: 4 }}>
               {children}
             </Grid2>
           </Box>
           <Footer />
         </Container>
       </Box>
+      <Snackbars />
+      <Backdrop
+        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+        open={loading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 }
