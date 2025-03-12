@@ -1,4 +1,3 @@
-import React from "react";
 import MenuItemComponent from "./MenuItem";
 import { useAtom } from "jotai";
 import { sideBarMenuData } from "../states/list";

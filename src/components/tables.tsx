@@ -52,6 +52,7 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                         borderBottom: '1px solid #e0e0e0',
                         fontSize: '14px',
                         // color: '#333',
+                        alignContent: 'center',
                     },
                     // '& .MuiDataGrid-row': {
                     // height: 'auto',
@@ -59,7 +60,7 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                     // },
                     border: '1px solid #e0e0e0',
                     '& .MuiDataGrid-columnHeaders': {
-                        // backgroundColor: '#1976d2',
+                        backgroundColor: '#1976d2',
                         color: '#1976d2',
                         fontSize: '16px',
                         borderBottom: 'none',

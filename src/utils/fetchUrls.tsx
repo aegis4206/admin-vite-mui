@@ -1,3 +1,3 @@
 import useFetchActions from './fetchActions';
 
-export const useTest = () => useFetchActions("test");
+export const useTest = <T=unknown>() => useFetchActions<T>("test");

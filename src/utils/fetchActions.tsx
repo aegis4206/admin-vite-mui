@@ -1,29 +1,18 @@
-import * as React from 'react';
+// import * as React from 'react';
 import { loadingAtom } from '../states/global';
 import { useAtom } from "jotai";
 // import { useNavigate } from 'react-router-dom';
 import { snackBarAtom } from '../states/global';
+import { ApiResponse, FetchActionsType } from '../types/fetch';
 
 
-interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data?: T;
-    error_code?: number;
-}
-
-interface FetchActions<T> {
-    get: () => Promise<ApiResponse<T>>;
-    post: (body: T) => Promise<ApiResponse<T>>;
-}
-
-function useFetchActions<T = unknown>(url: string): FetchActions<T> {
+function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
     const [, setLoading] = useAtom(loadingAtom);
     const [, setSnackBar] = useAtom(snackBarAtom);
 
 
     // const navigate = useNavigate();
-    const fetchHandle = async (method: string, body?: T): Promise<ApiResponse<T>> => {
+    const fetchHandle = async (method: string, body?: Record<string, unknown>): Promise<ApiResponse<T>> => {
         setLoading(true)
 
         try {
@@ -64,7 +53,7 @@ function useFetchActions<T = unknown>(url: string): FetchActions<T> {
 
     return ({
         get: () => fetchHandle("GET"),
-        post: (body: T) => fetchHandle("POST", body)
+        post: (body: Record<string, unknown>) => fetchHandle("POST", body)
     })
 }
 

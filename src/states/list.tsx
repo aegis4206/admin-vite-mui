@@ -1,10 +1,27 @@
 import { atom } from "jotai";
-import { Fa0, Fa1, Fa2 } from "react-icons/fa6";
 import { MenuItem } from "../types/menu";
-import { FaUserCircle } from "react-icons/fa";
+import { FaUserCircle } from 'react-icons/fa';
+import { BsClipboard2Data, BsBuilding } from 'react-icons/bs';
+import { IoMdBusiness } from 'react-icons/io';
+import { CiDeliveryTruck } from 'react-icons/ci';
+import { MdOutlineStoreMallDirectory, MdShoppingCart, MdConstruction } from 'react-icons/md';
+import { TbTruckDelivery } from 'react-icons/tb';
+import { PiWarehouseDuotone } from 'react-icons/pi';
+import { LuShoppingBag } from 'react-icons/lu';
+import { SiStarbucks, SiCarrefour } from 'react-icons/si';
+import { FaStore, FaUsers, FaBoxes, FaRegClipboard } from 'react-icons/fa';
+
+
+
 import Admin_user from "../Pages/Admin_user";
 
+
 export const sideBarMenuData = atom<MenuItem[]>([
+    {
+        name: "範例",
+        path: "Example",
+        icon: <FaUsers />,
+    },
     {
         name: "系統管理",
         path: "",
@@ -17,7 +34,7 @@ export const sideBarMenuData = atom<MenuItem[]>([
                 pageNode: <Admin_user />,
             },
             {
-                name: "腳色管理",
+                name: "角色管理",
                 path: "role",
                 icon: <FaUserCircle />,
             },
@@ -27,100 +44,229 @@ export const sideBarMenuData = atom<MenuItem[]>([
                 icon: <FaUserCircle />,
             },
             {
-                name: "第三層測試",
+                name: "一二三四五六七八九",
                 path: "",
                 icon: <FaUserCircle />,
                 children: [
                     {
-                        name: "test1",
+                        name: "一二三四五六七八",
                         path: "test1",
-                        icon: <Fa2 />,
+                        icon: <MdConstruction />,
                     },
                     {
                         name: "test2",
                         path: "test2",
-                        icon: <Fa2 />,
+                        icon: <MdConstruction />,
                     },
                     {
                         name: "test3",
                         path: "test3",
-                        icon: <Fa2 />,
+                        icon: <MdConstruction />,
                     },
                 ]
             },
         ]
     },
     {
-        name: "通路管理",
+        name: "基本資料",
         path: "",
-        icon: <Fa0 />,
+        icon: <BsClipboard2Data />,
         children: [
             {
-                name: "通路基本資料",
-                path: "channel_basic_info",
-                icon: <Fa1 />,
+                name: "馬修",
+                path: "",
+                icon: <BsBuilding />,
+                children: [
+                    {
+                        name: "商品維護",
+                        path: "product_maintenance",
+                        icon: <LuShoppingBag />,
+                    },
+                    // {
+                    //     name: "商品對照查詢",
+                    //     path: "product_comparison",
+                    //     icon: <PiWarehouseDuotone />,
+                    // },
+                    {
+                        name: "商品對照查詢",
+                        path: "channel_erp_product_mapping",
+                        icon: <LuShoppingBag />,
+                    },
+                    {
+                        name: "倉庫維護",
+                        path: "company_warehouse",
+                        icon: <PiWarehouseDuotone />,
+                    },
+                ]
             },
             {
-                name: "代送商基本資料",
-                path: "agent_basic_info",
-                icon: <Fa1 />,
-            },
-            {
-                name: "通路門市基本資料",
-                path: "channel_store_info",
-                icon: <Fa1 />,
-            },
-            {
-                name: "代送商門市",
-                path: "agent_store",
-                icon: <Fa1 />,
-            },
-            {
-                name: "代送商倉庫",
-                path: "agent_warehouse",
-                icon: <Fa1 />,
-            },
-            {
-                name: "門市商品",
-                path: "store_products",
-                icon: <Fa1 />,
+                name: "通路商",
+                path: "",
+                icon: <BsBuilding />,
+
             },
         ]
     },
     {
-        name: "倉庫管理",
+        name: "全聯",
         path: "",
-        icon: <Fa0 />,
+        icon: <FaStore />,
         children: [
             {
-                name: "倉庫基本資料",
-                path: "warehouse_basic_info",
-                icon: <Fa1 />,
+                name: "訂單轉入平台",
+                path: "pxmart_order_import",
+                icon: <MdShoppingCart />,
+            },
+            {
+                name: "訂單維護作業",
+                path: "pxmart_order_maintenance",
+                icon: <FaRegClipboard />,
+            },
+            {
+                name: "訂單管理查詢",
+                path: "pxmart_order_management",
+                icon: <FaRegClipboard />,
+            },
+            {
+                name: "訂單轉出銷貨",
+                path: "pxmart_order_export",
+                icon: <MdShoppingCart />,
+            },
+            {
+                name: "庫存管理查詢",
+                path: "pxmart_inventory_management",
+                icon: <FaBoxes />,
             },
         ]
     },
     {
-        name: "商品管理",
+        name: "星巴克",
         path: "",
-        icon: <Fa0 />,
+        icon: <SiStarbucks />,
         children: [
             {
-                name: "商品基本資料",
-                path: "product_basic_info",
-                icon: <Fa1 />,
+                name: "訂單轉入平台",
+                path: "starbucks_order_import",
+                icon: <MdShoppingCart />,
+            },
+            {
+                name: "訂單維護作業",
+                path: "starbucks_order_maintenance",
+                icon: <FaRegClipboard />,
+            },
+            {
+                name: "訂單管理查詢",
+                path: "starbucks_order_management",
+                icon: <FaRegClipboard />,
+            },
+            {
+                name: "訂單轉出銷貨",
+                path: "starbucks_order_export",
+                icon: <MdShoppingCart />,
+            },
+            {
+                name: "庫存管理查詢",
+                path: "starbucks_inventory_management",
+                icon: <FaBoxes />,
             },
         ]
     },
     {
-        name: "測試",
+        name: "超商",
         path: "",
-        icon: <Fa0 />,
+        icon: <FaStore />,
         children: [
+            // {
+            //     name: "訂單轉入平台",
+            //     path: "convenience_store_order_import",
+            //     icon: <MdShoppingCart />,
+            // },
             {
-                name: "API測試",
-                path: "posts",
-                icon: <Fa1 />,
+                name: "訂單維護作業",
+                path: "convenience_store_order_maintenance",
+                icon: <FaRegClipboard />,
+            },
+            {
+                name: "訂單管理查詢",
+                path: "convenience_store_order_management",
+                icon: <FaRegClipboard />,
+            },
+            {
+                name: "訂單轉出銷貨",
+                path: "convenience_store_order_export",
+                icon: <MdShoppingCart />,
+            },
+            {
+                name: "庫存管理查詢",
+                path: "convenience_store_inventory_management",
+                icon: <FaBoxes />,
             },
         ]
+    },
+    {
+        name: "家樂福",
+        path: "",
+        icon: <SiCarrefour />,
+        children: [
+            {
+                name: "量販",
+                path: "carrefour_hypermarket",
+                icon: <FaStore />,
+                children: [],
+            },
+            {
+                name: "便利購",
+                path: "carrefour_convenience",
+                icon: <FaStore />,
+                children: [],
+            },
+            {
+                name: "Mina",
+                path: "carrefour_mina",
+                icon: <FaStore />,
+                children: [],
+            },
+        ]
+    },
+    {
+        name: "經銷商",
+        path: "",
+        icon: <FaUsers />,
+        children: [
+            {
+                name: "經銷商A",
+                path: "distributor_a",
+                icon: <FaUsers />,
+                children: [],
+            },
+            {
+                name: "經銷商B",
+                path: "distributor_b",
+                icon: <FaUsers />,
+                children: [],
+            },
+            {
+                name: "經銷商C",
+                path: "distributor_c",
+                icon: <FaUsers />,
+                children: [],
+            },
+            {
+                name: "經銷商D",
+                path: "distributor_d",
+                icon: <FaUsers />,
+                children: [],
+            },
+        ]
+    },
+    {
+        name: "團購",
+        path: "group_purchase",
+        icon: <FaUsers />,
+    },
+    {
+        name: "異業合作",
+        path: "cross_industry_collaboration",
+        icon: <FaUsers />,
     },
 ])
