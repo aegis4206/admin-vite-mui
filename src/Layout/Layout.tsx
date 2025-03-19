@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { styled } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
@@ -11,8 +10,10 @@ import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Container from '@mui/material/Container';
 import { IoMdMenu } from "react-icons/io";
-import { FaChevronLeft } from "react-icons/fa";
-import { FaGithub } from "react-icons/fa";
+import { FaChevronLeft, FaUserCircle } from "react-icons/fa";
+import { RiTranslate } from "react-icons/ri";
+// import { FaGithub } from "react-icons/fa";
+
 import Footer from './Footer'
 import SideBarMenu from './SideBarMenu';
 import Breadcrumbs from './Breadcrumbs';
@@ -20,7 +21,11 @@ import { Link } from 'react-router-dom';
 import { Backdrop, CircularProgress, Grid2 } from '@mui/material';
 import Snackbars from '../components/snackbar';
 import { loadingAtom } from '../states/global';
+import { drawerShow } from '../states/global';
 import { useAtom } from "jotai";
+// import logo from '../assets/logo.png';
+import logo_white from '../assets/logo_white.svg';
+import { useTranslation } from 'react-i18next';
 
 const drawerWidth: number = 240;
 
@@ -37,8 +42,15 @@ const AppBar = styled(MuiAppBar, {
     duration: theme.transitions.duration.leavingScreen,
   }),
   ...(open && {
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
+    // marginLeft: drawerWidth,
+    // width: `calc(100% - ${drawerWidth}px)`,
+    [theme.breakpoints.down('sm')]: {
+      display: 'none',
+    },
+    [theme.breakpoints.up('sm')]: {
+      marginLeft: drawerWidth,
+      width: `calc(100% - ${drawerWidth}px)`,
+    },
     transition: theme.transitions.create(['width', 'margin'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
@@ -50,7 +62,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   '& .MuiDrawer-paper': {
     position: 'relative',
     whiteSpace: 'nowrap',
-    width: drawerWidth,
+    // width: drawerWidth,
     transition: theme.transitions.create('width', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.enteringScreen,
@@ -66,11 +78,38 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
       [theme.breakpoints.up('sm')]: {
         width: theme.spacing(9),
       },
+      [theme.breakpoints.down('sm')]: {
+        width: 0,
+      },
+    }),
+    ...(open && {
+      [theme.breakpoints.down('sm')]: {
+        width: '100vw',
+      },
+      [theme.breakpoints.up('sm')]: {
+        width: drawerWidth,
+      },
     }),
   },
 }),
 );
 
+const CustomToolbar = styled(Toolbar)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  px: [1],
+  backgroundImage: `url(${logo_white})`,
+  backgroundColor: '#004523',
+  backgroundSize: '65%',
+  backgroundPositionY: 'center',
+  backgroundPositionX: '20%',
+  backgroundRepeat: 'no-repeat',
+  [theme.breakpoints.down('sm')]: {
+    backgroundSize: '35%',
+    backgroundPositionX: 'center',
+  },
+}));
 
 export default function Dashboard(
   {
@@ -80,9 +119,13 @@ export default function Dashboard(
   }
 ) {
 
-  const [open, setOpen] = useState<boolean>(true);
   const [loading,] = useAtom(loadingAtom);
+  const [open, setOpen] = useAtom(drawerShow);
+  const { i18n } = useTranslation();
 
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === 'zh' ? 'en' : 'zh');
+  }
 
   // const [windowWidth, setWindowWidth] = React.useState(0);
 
@@ -100,9 +143,14 @@ export default function Dashboard(
   //   };
   // }, []);
 
-  // React.useEffect(() => {
-  // windowWidth < 768 ? setOpen(false) : setOpen(true)
-  // }, [windowWidth]);
+  useEffect(() => {
+    if (window.innerWidth > 768) {
+      setOpen(true);
+    }
+    return () => {
+
+    }
+  }, []);
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -110,7 +158,6 @@ export default function Dashboard(
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
       <Box sx={{ maxHeight: '100vh', display: 'flex' }}>
         <AppBar position="absolute" open={open}>
           <Toolbar
@@ -137,31 +184,34 @@ export default function Dashboard(
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              <Link to="/">Ka特販</Link>
+              <Link to="/">特販B2B2C</Link>
             </Typography>
-            <IconButton color="inherit" href='/#' target="_blank">
+            {/* <IconButton color="inherit" href='/#' target="_blank">
               <FaGithub />
+            </IconButton> */}
+            <IconButton onClick={toggleLanguage} color="inherit">
+              <RiTranslate />
             </IconButton>
-
+            <IconButton color="inherit">
+              <FaUserCircle />
+            </IconButton>
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" sx={{}} open={open}>
-          <Toolbar
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              px: [1],
-            }}
+          <CustomToolbar
+            onClick={toggleDrawer} // 點擊logo收起選單
           >
-            <IconButton onClick={toggleDrawer}>
-              <FaChevronLeft />
+            <IconButton
+            // onClick={toggleDrawer}
+            >
+              <FaChevronLeft color='white' />
             </IconButton>
-          </Toolbar>
+          </CustomToolbar>
           <Divider />
           <List component="nav"
             sx={{
               overflowY: 'auto',
+              overflowX: 'hidden',
               scrollbarWidth: 'none', // Firefox
               msOverflowStyle: 'none', // IE 和 Edge
               '&::-webkit-scrollbar': {
@@ -209,7 +259,10 @@ export default function Dashboard(
       </Box>
       <Snackbars />
       <Backdrop
-        sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+        sx={{
+          color: '#fff',
+          zIndex: 9999,
+        }}
         open={loading}
       >
         <CircularProgress color="inherit" />

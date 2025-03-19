@@ -12,16 +12,36 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
 
 
     // const navigate = useNavigate();
-    const fetchHandle = async (method: string, body?: Record<string, unknown>): Promise<ApiResponse<T>> => {
-        setLoading(true)
-
+    const fetchHandle = async (method: string, param?: Record<string, unknown>, body?: T): Promise<ApiResponse<T>> => {
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}`, {
+            setLoading(true)
+            const controller = new AbortController();
+            setTimeout(() => {
+                controller.abort();
+            }, 1000);
+            let paramUrl = "";
+            switch (method) {
+                case "GET":
+                    if (param) {
+                        const searchParams = new URLSearchParams();
+                        paramUrl = `?${searchParams.toString()}`;
+                    }
+                    break;
+                case "PUT":
+                case "DELETE":
+                    if (body) {
+                        paramUrl = `/${(body as unknown as Record<string, unknown>).id}`;
+                    }
+                    break
+            }
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${paramUrl}`, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: body ? JSON.stringify(body) : null,
+                signal: controller.signal
             });
 
             const data: ApiResponse<T> = await res.json();
@@ -29,14 +49,21 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             if (res.status === 200) {
                 if (!data.success) {
                     setSnackBar({ open: true, message: data.message || 'Request failed', severity: 'error' });
+                } else {
+                    setSnackBar({ open: true, message: data.message || '操作成功', severity: 'success' });
                 }
-                setSnackBar({ open: true, message: '操作成功', severity: 'success' });
                 return data;
-            } else if (res.status === 401) {
-                setSnackBar({ open: true, message: 'Unauthorized', severity: 'error' });
-                // navigate('/login');
-                return { success: false, message: 'Unauthorized' };
-            } else {
+            }
+            // else if (res.status === 401) {
+            //     setSnackBar({ open: true, message: 'Unauthorized', severity: 'error' });
+            //     // navigate('/login');
+            //     return { success: false, message: 'Unauthorized' };
+            // } else if (res.status === 422) {
+            //     setSnackBar({ open: true, message: data.message || 'failedValidation', severity: 'error' });
+            //     // navigate('/login');
+            //     return { success: false, message: 'failedValidation' };
+            // } 
+            else {
                 setSnackBar({ open: true, message: data.message || 'Request failed', severity: 'error' });
                 return { success: false, message: data.message || 'Request failed' };
             }
@@ -52,8 +79,10 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
 
 
     return ({
-        get: () => fetchHandle("GET"),
-        post: (body: Record<string, unknown>) => fetchHandle("POST", body)
+        get: (param?: Record<string, string>) => fetchHandle("GET", param),
+        post: (body: T) => fetchHandle("POST", undefined, body),
+        put: (body: T) => fetchHandle("PUT", undefined, body),
+        delete: (body: T) => fetchHandle("DELETE", undefined, body),
     })
 }
 

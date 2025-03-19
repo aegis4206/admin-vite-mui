@@ -7,7 +7,7 @@ import App from './App';
 import './index.css'
 import { Provider } from 'jotai';
 import { BrowserRouter } from 'react-router-dom'
-
+import './utils/i18n';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

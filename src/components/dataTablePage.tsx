@@ -1,6 +1,6 @@
 // components/DataTablePage.tsx
 import { useState, useEffect, useMemo, useImperativeHandle, RefObject } from 'react';
-import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { GridColDef, GridValueGetter } from '@mui/x-data-grid';
 import { Button } from '@mui/material';
 import DataTable from './tables';
 import { FetchActionsType, TableRow } from '../types/fetch';
@@ -9,7 +9,7 @@ interface DataTablePageProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
     customRenderers?: {
-        [key: string]: (param: GridRenderCellParams) => string;
+        [key: string]: (param: GridValueGetter) => string;
     };
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
@@ -22,7 +22,7 @@ function DataTablePage<T extends TableRow>({
     fetchApi,
     customRenderers = {},
     onEdit,
-    onDelete,
+    // onDelete,
     extendColumns = [],
     ref,
 }: DataTablePageProps<T>) {
@@ -62,7 +62,7 @@ function DataTablePage<T extends TableRow>({
                     >
                         編輯
                     </Button>
-                    <Button
+                    {/* <Button
                         color="error"
                         onClick={(e) => {
                             e.stopPropagation();
@@ -70,7 +70,7 @@ function DataTablePage<T extends TableRow>({
                         }}
                     >
                         刪除
-                    </Button>
+                    </Button> */}
                 </>
             ),
         },
@@ -80,9 +80,8 @@ function DataTablePage<T extends TableRow>({
                 headerName: dataType[key],
                 width: key === "address" ? 150 : String(dataType[key]).length * 25,
             };
-
             return customRenderers[key]
-                ? { ...baseCol, renderCell: customRenderers[key] }
+                ? { ...baseCol, valueGetter: customRenderers[key] }
                 : baseCol;
         }),
         ...extendColumns,

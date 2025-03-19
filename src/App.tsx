@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { CssBaseline } from '@mui/material';
 import Layout from './Layout/Layout';
 import { Route, Routes } from 'react-router-dom';
 import { useAtom } from "jotai";
 import { sideBarMenuData } from "./states/list";
 import { MenuItem } from "./types/menu";
 import Example from './Pages/Example';
+
 
 export default function App() {
   const [list,] = useAtom<MenuItem[]>(sideBarMenuData)
@@ -39,7 +39,6 @@ export default function App() {
 
   return (
     <>
-      <CssBaseline></CssBaseline>
       <Layout>
         <Routes>
           <Route path='/' element={<>首頁</>}></Route>

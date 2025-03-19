@@ -8,9 +8,12 @@ export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data?: T;
-  error_code?: number;
+  errorCode?: number | string;
+  [key: string]: unknown;
 }
 export interface FetchActionsType<T> {
-  get: () => Promise<ApiResponse<T>>;
-  post: (body: Record<string, unknown>) => Promise<ApiResponse<T>>;
+  get: (param?: Record<string, string>) => Promise<ApiResponse<T>>;
+  post: (body: T) => Promise<ApiResponse<T>>;
+  put: (body: T) => Promise<ApiResponse<T>>;
+  delete: (body: T) => Promise<ApiResponse<T>>;
 }

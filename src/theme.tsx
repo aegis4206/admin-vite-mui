@@ -6,13 +6,44 @@ const theme = createTheme({
   cssVariables: true,
   palette: {
     primary: {
-      main: '#556cd6',
+      main: '#004523',
+      // main: '#556cd6',
     },
     secondary: {
       main: '#19857b',
     },
     error: {
       main: red.A400,
+    },
+  },
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiInputBase-root.Mui-disabled': {
+            backgroundColor: '#e0e0e0',
+            color: '#757575',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#b0b0b0',
+            },
+            cursor: 'not-allowed',
+          },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          '&.Mui-disabled': {
+            backgroundColor: '#e0e0e0',
+            color: '#757575',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#b0b0b0',
+            },
+            cursor: 'not-allowed',
+          },
+        },
+      },
     },
   },
 });

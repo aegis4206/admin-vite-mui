@@ -26,7 +26,8 @@ export const test = {
 
 const fields: ModalFieldConfig[] = [
     { name: "id", label: "代號", type: "text", disabled: true },
-    { name: "name", label: "名稱", type: "text" },
+    { name: "name", label: "名稱", type: "text", validation: ["isEmpty"] },
+    { name: "count", label: "數量", type: "number", validation: ["isPositiveInteger"] },
     { name: "createdAt", label: "建立時間", type: "text", disabled: true },
     { name: "updateAt", label: "修改時間", type: "text", disabled: true },
     { name: "creator", label: "新增者", type: "text", disabled: true },
