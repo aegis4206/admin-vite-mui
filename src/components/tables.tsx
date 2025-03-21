@@ -126,8 +126,6 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 getRowId={(row: T) => row.id || row.Id!}
                 localeText={{
                     ...localeText,
-                    // filterPanelOperator: "123"
-                    // columnsManagementShowHideAllText:
                 }}
                 sx={{
                     minWidth: '50px',

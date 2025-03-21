@@ -1,16 +1,11 @@
-import { Box, Button, FormControl, IconButton, InputAdornment, InputLabel, MenuItem, Modal, Select, TextField, Typography } from '@mui/material'
+import { Box, Button, Modal, Typography } from '@mui/material'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { ModalFieldConfig } from '../types/modal';
 import { isPositiveInteger } from '../utils/validate';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
+
+import FieldTool from './field';
 // import { modalShow } from '../states/modal'
 // import { useAtom } from 'jotai'
-
 const style = {
     position: 'absolute',
     top: '50%',
@@ -61,14 +56,7 @@ const ModalTool = <T,>({ open, setOpen, children, title, onSubmit, fields = [], 
         onSubmit(event);
     };
 
-    const handleFormChange = (name: keyof T, value: unknown) => {
-        if (!setFormData) return;
 
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
 
     const validation = (): boolean => {
         if (!formData) {
@@ -109,17 +97,6 @@ const ModalTool = <T,>({ open, setOpen, children, title, onSubmit, fields = [], 
     }, [formData, errorsInit])
 
 
-    // password設定
-    const [showPassword, setShowPassword] = useState(false);
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
-    const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-    };
-    const handleMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.preventDefault();
-    };
-
-
     return (
         <Modal
             open={open}
@@ -136,97 +113,21 @@ const ModalTool = <T,>({ open, setOpen, children, title, onSubmit, fields = [], 
                     display: "grid",
                     gridTemplateColumns: {
                         xs: 'repeat(1, 1fr)',
-                        sm: `repeat(${Object.keys(fields).length > 12 ? 3 : 2}, 1fr)`
+                        sm: `repeat(${fields.length > 12 ? 3 : 2}, 1fr)`
                     },
                     gap: 2, // 欄位間距
                     mt: 2, // 上方間距
                 }}>
-                    {fields.map((field) => {
-                        switch (field.type) {
-                            case "text":
-                            case "number":
-                            case "password":
-                                return (
-                                    <TextField
-                                        key={field.name}
-                                        label={field.label}
-                                        name={field.name}
-                                        type={field.type === 'password' ? showPassword ? 'text' : 'password' : field.type}
-                                        value={formData && formData[field.name as keyof T] as string | number}
-                                        onChange={(event) => handleFormChange(field.name as keyof T, event.target.value)}
-                                        fullWidth
-                                        disabled={field.disabled}
-                                        error={!!errors[field.name as string]}
-                                        helperText={errors[field.name as string]}
-                                        sx={{
-                                            '& input:-webkit-autofill': {
-                                                WebkitBoxShadow: '0 0 0 1000px white inset',
-                                                WebkitTextFillColor: '#000',
-                                            },
-                                        }}
-                                        slotProps={
-                                            {
-                                                input: {
-                                                    endAdornment: (
-                                                        field.type === "password" ?
-                                                            <InputAdornment position="end">
-                                                                <IconButton
-                                                                    aria-label={
-                                                                        showPassword ? 'hide the password' : 'display the password'
-                                                                    }
-                                                                    onClick={handleClickShowPassword}
-                                                                    onMouseDown={handleMouseDownPassword}
-                                                                    onMouseUp={handleMouseUpPassword}
-                                                                    edge="end"
-                                                                >
-                                                                    {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-                                                                </IconButton>
-                                                            </InputAdornment> : undefined
-                                                    )
-                                                },
-                                            }
-                                        }
-                                    />
-                                );
-                            case "select":
-                                return (
-                                    <FormControl key={field.name} fullWidth >
-                                        <InputLabel>{field.label}</InputLabel>
-                                        <Select
-                                            label={field.label}
-                                            name={field.name}
-                                            value={formData && formData[field.name as keyof T] as string | number}
-                                            onChange={(event) => handleFormChange(field.name as keyof T, event.target.value)}
-                                        >
-                                            {field.options?.map((option) => (
-                                                <MenuItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                );
-                            case "date":
-                                return (
-                                    <LocalizationProvider key={field.name} dateAdapter={AdapterDayjs}>
-                                        <DemoContainer components={['DatePicker']}>
-                                            <DatePicker
-                                                defaultValue={dayjs(formData && formData[field.name as keyof T] as string)}
-                                                label={field.label}
-                                                value={formData && dayjs(formData[field.name as keyof T] as string)}
-                                                onChange={(newValue) => handleFormChange(field.name as keyof T, dayjs(newValue).format('YYYY-MM-DD'))}
-                                                format='YYYY-MM-DD'
-                                            />
-                                        </DemoContainer>
-                                    </LocalizationProvider>
-                                );
-                            default:
-                                if (customField[field.name as string]) {
-                                    return customField[field.name as string] && customField[field.name as string](field);
-                                }
-                                return null;
-                        }
-                    })}
+                    {formData && setFormData &&
+                        <FieldTool<T>
+                            fields={fields}
+                            fieldsData={formData}
+                            setFieldsData={setFormData}
+                            errors={errors}
+                            customField={customField}
+                        />
+                    }
+
                     {children}
                 </Box>
                 <Box

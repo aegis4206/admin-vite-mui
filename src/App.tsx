@@ -4,8 +4,8 @@ import { Route, Routes } from 'react-router-dom';
 import { useAtom } from "jotai";
 import { sideBarMenuData } from "./states/list";
 import { MenuItem } from "./types/menu";
-import Example from './Pages/Example';
-
+// import Login from './Pages/login';
+import { Box, CircularProgress } from '@mui/material';
 
 export default function App() {
   const [list,] = useAtom<MenuItem[]>(sideBarMenuData)
@@ -16,10 +16,17 @@ export default function App() {
 
     const recursionHandle = (list: MenuItem[]) => {
       list.forEach(item => {
-        if (item.path === "" && !!item.children && item.children?.length > 0) {
+        if ("children" in item && !!item.children && item.children?.length > 0) {
           return recursionHandle(item.children);
         }
+
+        // 無children追加該item進routesList
         tempList.push(item)
+
+        // noSideBarRoute遞迴處理
+        if ("noSideBarRoute" in item && !!item.noSideBarRoute && item.noSideBarRoute?.length > 0) {
+          return recursionHandle(item.noSideBarRoute);
+        }
       });
     }
     recursionHandle(list);
@@ -39,12 +46,25 @@ export default function App() {
 
   return (
     <>
+      {/* <Login></Login> */}
       <Layout>
-        <Routes>
-          <Route path='/' element={<>首頁</>}></Route>
-          <Route path='Example' element={<Example />}></Route>
-          {routesList.map(route => <Route path={route.path} element={route.pageNode ? route.pageNode : <div>{route.name}</div>} key={route.path} />)}
-        </Routes>
+        {routesList.length > 0 ? (
+          <Routes>
+            <Route path="/" element={<>首頁</>} />
+            {routesList.map((route) => (
+              <Route
+                path={route.path}
+                element={route.pageNode ?? <div>{route.name}</div>}
+                key={route.path}
+              />
+            ))}
+            <Route path="*" element={<div>404 - Page Not Found</div>} />
+          </Routes>
+        ) : (
+          <Box>
+            <CircularProgress />
+          </Box>
+        )}
       </Layout>
     </>
   );

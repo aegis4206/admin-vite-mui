@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import DataTablePage from '../components/dataTablePage';
 import { useTest } from '../utils/fetchUrls';
 import { GridRenderCellParams } from '@mui/x-data-grid';
-import { FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, Typography, Grid2 } from '@mui/material';
 import ModalTool from '../components/modal';
 import { ModalFieldConfig } from '../types/modal';
 
@@ -24,6 +24,13 @@ export const test = {
     modifier: "修改者",
 };
 
+
+// 常數設定
+type PAGE_ENTITY_TYPE = TestType; // 資料類型
+const PAGE_ENTITY = test;         // 資料結構定義
+const PAGE_API_HOOK = useTest;     // API Hook
+const PAGE_TITLE = "Example";         // 頁面標題
+
 const fields: ModalFieldConfig[] = [
     { name: "id", label: "代號", type: "text", disabled: true },
     { name: "name", label: "名稱", type: "text", validation: ["isEmpty"] },
@@ -33,7 +40,7 @@ const fields: ModalFieldConfig[] = [
     { name: "creator", label: "新增者", type: "text", disabled: true },
     { name: "modifier", label: "修改者", type: "text", disabled: true },
 ];
-const initData: TestType = {
+const initData: PAGE_ENTITY_TYPE = {
     id: "",
     name: "",
     createdAt: "",
@@ -49,7 +56,7 @@ const Example = () => {
     const [modelFields, setModelFields] = useState(fields);
     const tableRef = useRef<{ getData: () => void }>(null);
     const titleMode = modalMode === "add" ? "新增" : modalMode === "edit" ? "編輯" : "刪除";
-    const testApi = useTest();
+    const pageApi = PAGE_API_HOOK();
 
     const customRenderers = {
         name: (param: GridRenderCellParams) => {
@@ -62,13 +69,39 @@ const Example = () => {
     };
 
 
-    const onEdit = (row: TestType) => {
+    const onEdit = (row: PAGE_ENTITY_TYPE) => {
         console.log(row);
         setModalMode("edit");
         setFormData(row);
         setOpen(true);
 
     };
+
+
+    const onAdd = () => {
+        setModalMode("add");
+        setFormData({ ...initData });
+        setOpen(true);
+    }
+
+    const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        console.log(formData);
+        const api = {
+            add: () => pageApi.post(formData),
+            edit: () => pageApi.put(formData),
+            delete: () => pageApi.delete(formData),
+        }
+
+        const result = await api[modalMode]();
+        if (result.success) {
+            setOpen(false);
+            setTimeout(() => {
+                tableRef.current?.getData();
+            }, 500);
+        }
+    }
+
     const handleSelecthange = (name: string, value: unknown) => {
 
     };
@@ -87,7 +120,6 @@ const Example = () => {
 
     useEffect(() => {
         fieldsCheck()
-        testApi.get();
         return () => {
         }
     }, [])
@@ -99,7 +131,7 @@ const Example = () => {
             <Select
                 label={field.label}
                 name={field.name}
-                value={formData[field.name as keyof TestType] as string | number}
+                value={formData[field.name as keyof PAGE_ENTITY_TYPE] as string | number}
                 onChange={(event) => handleSelecthange(field.name, event.target.value)}
             >
                 {field.options?.map((option) => (
@@ -115,14 +147,17 @@ const Example = () => {
 
     return (
         <>
-            <Typography variant="h5" component="h1" sx={{ mb: 2 }}>
-                Example
-            </Typography>
-            <DataTablePage<TestType>
-                dataType={test}
-                fetchApi={useTest}
+            <Grid2 size={{ xs: 12, sm: 12 }}>
+                <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
+                    {PAGE_TITLE}
+                </Typography>
+            </Grid2>
+            <DataTablePage<PAGE_ENTITY_TYPE>
+                dataType={PAGE_ENTITY}
+                fetchApi={PAGE_API_HOOK}
                 customRenderers={customRenderers}
                 onEdit={onEdit}
+                onAdd={onAdd}
                 ref={tableRef}
             />
             <ModalTool
@@ -132,9 +167,7 @@ const Example = () => {
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={(event) => {
-                    event.preventDefault();
-                    console.log(formData);
-                    // tableRef.current?.getData();
+                    onSubmit(event);
                 }}
                 fields={modelFields}
                 customField={customField}

@@ -5,4 +5,6 @@ export interface ModalFieldConfig {
   options?: { value: string | number; label: string }[];
   disabled?: boolean;
   validation?: ("isEmpty" | "isPositiveInteger")[];
+  param?: boolean;
+  [key: string]: unknown;
 }

@@ -15,12 +15,12 @@ const MenuItemComponent: React.FC<{
     level: number;
 }> = ({ item, level }) => {
     const [open, setOpen] = useState<boolean>(false);
-    const hasChildren = !!item.children && item.children.length > 0;
+    const hasChildren = "children" in item && !!item.children && item.children.length > 0;
     const location = useLocation();
 
     const includeCheck = (item: MenuItem): boolean =>
-        !!item.children && item.children.some(childremItem => {
-            if (!!childremItem.children && childremItem.children.length > 0) {
+        "children" in item && !!item.children && item.children.some(childremItem => {
+            if ("children" in childremItem && !!childremItem.children && childremItem.children.length > 0) {
                 return includeCheck(childremItem)
             }
             return location.pathname === `/${childremItem.path}`
@@ -54,10 +54,10 @@ const MenuItemComponent: React.FC<{
                 {hasChildren && (open ? <MdExpandLess /> : <MdExpandMore />)}
             </ListItemButton >
 
-            {hasChildren && (
+            {hasChildren && item.children && (
                 <Collapse in={open} >
                     <List component="div" disablePadding>
-                        {item.children!.map((child: MenuItem, index: number) => (
+                        {item.children.map((child: MenuItem, index: number) => (
                             <MenuItemComponent key={index} item={child} level={level + 1} />
                         ))}
                     </List>

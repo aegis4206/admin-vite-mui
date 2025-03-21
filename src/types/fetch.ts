@@ -7,7 +7,7 @@ export interface TableRow {
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
-  data?: T;
+  data?: T[] | T;
   errorCode?: number | string;
   [key: string]: unknown;
 }

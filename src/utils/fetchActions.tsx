@@ -12,7 +12,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
 
 
     // const navigate = useNavigate();
-    const fetchHandle = async (method: string, param?: Record<string, unknown>, body?: T): Promise<ApiResponse<T>> => {
+    const fetchHandle = async (method: string, param?: Record<string, string>, body?: T): Promise<ApiResponse<T>> => {
         try {
             setLoading(true)
             const controller = new AbortController();
@@ -23,8 +23,12 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             switch (method) {
                 case "GET":
                     if (param) {
-                        const searchParams = new URLSearchParams();
-                        paramUrl = `?${searchParams.toString()}`;
+                        if (param.id) {
+                            paramUrl = `/${param.id}`;
+                        } else {
+                            const searchParams = new URLSearchParams(param);
+                            paramUrl = `?${searchParams.toString()}`;
+                        }
                     }
                     break;
                 case "PUT":
@@ -50,8 +54,15 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 if (!data.success) {
                     setSnackBar({ open: true, message: data.message || 'Request failed', severity: 'error' });
                 } else {
-                    setSnackBar({ open: true, message: data.message || '操作成功', severity: 'success' });
+                    // setSnackBar({ open: true, message: data.message || '操作成功', severity: 'success' });
                 }
+
+                // 排除object的情況 將object轉為array
+                if (!Array.isArray(data.data)) {
+                    const tempData = [];
+                    tempData.push(data.data as T);
+                    return { ...data, data: tempData };
+                };
                 return data;
             }
             // else if (res.status === 401) {

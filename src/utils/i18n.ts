@@ -86,8 +86,7 @@ const resources = {
         footerRowSelected_one: "Selected {{count}} row",
         footerRowSelected_other: "Selected {{count}} rows",
         footerTotalRows: "Total Rows:",
-        footerTotalVisibleRows:
-          "{{visibleCount}} of {{totalCount}}",
+        footerTotalVisibleRows: "{{visibleCount}} of {{totalCount}}",
         footerPaginationRowsPerPage: "Rows per page:",
         MuiTablePagination: {
           labelRowsPerPage: "Rows per page:",
@@ -97,6 +96,20 @@ const resources = {
           "getItemAriaLabel.next": "Go to next page",
           "getItemAriaLabel.previous": "Go to previous page",
         },
+      },
+      datePicker: {
+        dateFormat: "YYYY-MM-DD",
+
+        previousMonth: "Previous Month",
+        nextMonth: "Next Month",
+        cancelButtonLabel: "Cancel",
+        clearButtonLabel: "Clear",
+        okButtonLabel: "Ok",
+        todayButtonLabel: "Today",
+
+        fieldYearPlaceholder: "Year",
+        fieldMonthPlaceholder: "Month",
+        fieldDayPlaceholder: "Day",
       },
     },
   },
@@ -183,7 +196,7 @@ const resources = {
 
         footerRowSelected: "已選擇 {{count}} 行",
         footerTotalRows: "總行數：",
-        footerTotalVisibleRows:"{{visibleCount}} / {{totalCount}}",
+        footerTotalVisibleRows: "{{visibleCount}} / {{totalCount}}",
         footerPaginationRowsPerPage: "每頁行數：",
         MuiTablePagination: {
           labelRowsPerPage: "每頁行數：",
@@ -193,6 +206,20 @@ const resources = {
           "getItemAriaLabel.next": "前往下一頁",
           "getItemAriaLabel.previous": "前往上一頁",
         },
+      },
+      datePicker: {
+        dateFormat: "YYYY年MM月DD日",
+
+        previousMonth: "上個月",
+        nextMonth: "下個月",
+        cancelButtonLabel: "取消",
+        clearButtonLabel: "清除",
+        okButtonLabel: "確定",
+        todayButtonLabel: "今天",
+
+        fieldYearPlaceholder: "年",
+        fieldMonthPlaceholder: "月",
+        fieldDayPlaceholder: "日",
       },
     },
   },
@@ -205,7 +232,11 @@ i18n.use(initReactI18next).init({
   interpolation: {
     escapeValue: false,
   },
-  debug: true,
+  // debug: true,
+});
+
+i18n.on("languageChanged", (lng) => {
+  console.log("Language changed to:", lng);
 });
 
 export default i18n;
