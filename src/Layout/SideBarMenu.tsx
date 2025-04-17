@@ -1,6 +1,6 @@
 import MenuItemComponent from "./MenuItem";
 import { useAtom } from "jotai";
-import { sideBarMenuData } from "../states/list";
+import { sideBarMenuData } from "../states/route";
 import { MenuItem } from "../types/menu";
 
 

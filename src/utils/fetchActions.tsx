@@ -12,14 +12,15 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
 
 
     // const navigate = useNavigate();
-    const fetchHandle = async (method: string, param?: Record<string, string>, body?: T): Promise<ApiResponse<T>> => {
+    const fetchHandle = async (method: string, param?: Record<string, string>, body?: T, SpecificUrl?: string): Promise<ApiResponse<T>> => {
+        const controller = new AbortController();
+
         try {
             setLoading(true)
-            const controller = new AbortController();
             setTimeout(() => {
                 controller.abort();
-            }, 1000);
-            let paramUrl = "";
+            }, 2000);
+            let paramUrl = SpecificUrl ?? "";
             switch (method) {
                 case "GET":
                     if (param) {
@@ -27,7 +28,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                             paramUrl = `/${param.id}`;
                         } else {
                             const searchParams = new URLSearchParams(param);
-                            paramUrl = `?${searchParams.toString()}`;
+                            paramUrl = Object.keys(param).length > 0 ? `?${searchParams.toString()}` : "";
                         }
                     }
                     break;
@@ -37,6 +38,9 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                         paramUrl = `/${(body as unknown as Record<string, unknown>).id}`;
                     }
                     break
+            }
+            if (url === "") {
+                paramUrl = `${SpecificUrl}`;
             }
 
             const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${paramUrl}`, {
@@ -63,6 +67,11 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                     tempData.push(data.data as T);
                     return { ...data, data: tempData };
                 };
+
+                if (method !== "GET") {
+                    setSnackBar({ open: true, message: '操作成功', severity: 'success' });
+                }
+
                 return data;
             }
             // else if (res.status === 401) {
@@ -84,16 +93,17 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
         } finally {
             setTimeout(() => {
                 setLoading(false);
+
             }, 500);
         }
     }
 
 
     return ({
-        get: (param?: Record<string, string>) => fetchHandle("GET", param),
-        post: (body: T) => fetchHandle("POST", undefined, body),
-        put: (body: T) => fetchHandle("PUT", undefined, body),
-        delete: (body: T) => fetchHandle("DELETE", undefined, body),
+        get: (param?: Record<string, string> | string) => fetchHandle("GET", url === "" ? undefined : param as Record<string, string>, undefined, param as string),
+        post: (body: T, forSpecificUrl?: string) => fetchHandle("POST", undefined, body, forSpecificUrl),
+        put: (body: T, forSpecificUrl?: string) => fetchHandle("PUT", undefined, body, forSpecificUrl),
+        delete: (body: T, forSpecificUrl?: string) => fetchHandle("DELETE", undefined, body, forSpecificUrl),
     })
 }
 

@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@font-face {
+    font-family: 'DIN'; 
+    src: url('./assets/fonts/DIN.ttf') format('truetype');
+    font-weight: 400; 
+    font-style: normal; 
+  }

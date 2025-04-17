@@ -1,6 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { Box, Breadcrumbs as MuiBreadcrumbs } from "@mui/material";
-import { sideBarMenuData } from "../states/list";
+import { sideBarMenuData } from "../states/route";
 import { MenuItem } from "../types/menu";
 import { useAtom } from "jotai";
 import { useState, useEffect } from "react";

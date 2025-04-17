@@ -9,6 +9,7 @@ import {
     ListItemIcon,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
+// import { t } from "i18next";
 
 const MenuItemComponent: React.FC<{
     item: MenuItem;
@@ -18,15 +19,16 @@ const MenuItemComponent: React.FC<{
     const hasChildren = "children" in item && !!item.children && item.children.length > 0;
     const location = useLocation();
 
-    const includeCheck = (item: MenuItem): boolean =>
-        "children" in item && !!item.children && item.children.some(childremItem => {
-            if ("children" in childremItem && !!childremItem.children && childremItem.children.length > 0) {
-                return includeCheck(childremItem)
-            }
-            return location.pathname === `/${childremItem.path}`
-        });
+    // const includeCheck = (item: MenuItem): boolean =>
+    // ("children" in item && !!item.children && item.children.some(childremItem => {
+    //     if (("children" in childremItem && !!childremItem.children && childremItem.children.length > 0)) {
+    //         return includeCheck(childremItem)
+    //     } 
+    //     return location.pathname === `/${childremItem.path}`
+    // }))
+    //     ;
+    const isInclude = location.pathname.includes(`${item.path}`);
 
-    const isInclude = includeCheck(item);
     const isActive = item.path && location.pathname === `/${item.path}`;
 
     // 根據是否有子項決定是否渲染為 Menu.Item
@@ -47,7 +49,7 @@ const MenuItemComponent: React.FC<{
                 onClick={hasChildren ? () => setOpen(!open) : undefined}
                 component={(Link as React.ElementType)} // 無子項時作為Link
                 to={hasChildren ? undefined : `/${item.path}`} // 有子項時不設Link
-                selected={!!isActive || isInclude}
+                selected={isActive || isInclude}
             >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText sx={{ ml: -2, overflow: "hidden" }} primary={item.name} />

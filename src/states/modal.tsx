@@ -1,3 +1,4 @@
 import { atom } from "jotai";
+import { ModalMessageProps } from "../types/modal";
 
-export const modalShow = atom<boolean>(false);
+export const modalMessageAtom = atom<ModalMessageProps<unknown>>();

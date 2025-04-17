@@ -1,43 +1,36 @@
 // components/DataTablePage.tsx
 import { useState, useEffect, useMemo, useImperativeHandle, RefObject } from 'react';
-import { GridColDef, GridRenderCellParams, GridValueGetter } from '@mui/x-data-grid';
+import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box, Button, Collapse, Grid2 } from '@mui/material';
 import DataTable from './dataTables';
 import { FetchActionsType, TableRow } from '../types/fetch';
 import FieldTool from './fieldTool';
 import { ModalFieldConfig } from '../types/modal';
-import { IoMdAdd, IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
+import { IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
 import { CiSearch, CiEraser } from "react-icons/ci";
 import { useSearchParams } from 'react-router-dom';
 
 interface DataTablePageProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
-    customRenderers?: {
-        [key: string]: (param: GridValueGetter, row?: T) => string;
+    customColumns?: {
+        [key: string]: GridColDef;
     };
-    onAdd?: () => void;
-    onEdit?: (row: T) => void;
-    onDelete?: (row: T) => void;
     extendColumns?: GridColDef[];
     ref?: RefObject<{ getData: () => void } | null>;
     paramFields?: ModalFieldConfig[];
     extendActions?: (params: GridRenderCellParams) => React.ReactNode;
-    viewOnly?: boolean;
+    multiSelect?: boolean;
 }
 
 function DataTablePage<T extends TableRow>({
     dataType,
     fetchApi,
-    customRenderers = {},
-    onAdd,
-    onEdit,
-    onDelete,
+    customColumns = {},
     extendColumns = [],
     ref,
     paramFields = [],
-    extendActions,
-    viewOnly = false,
+    multiSelect = false,
 }: DataTablePageProps<T>) {
     const paramsDataInit = useMemo(() => paramFields.reduce((acc, field) => {
         acc[field.name] = "";
@@ -48,6 +41,7 @@ function DataTablePage<T extends TableRow>({
     const [advance, setAdvance] = useState(false);
     const [searchParams] = useSearchParams();
 
+    // 過濾paramFields=param 洗掉disabled的欄位
     const paramFieldsHandle = useMemo(() => paramFields.filter((field) => field.param).
         map(field => {
             const newField = { ...field };
@@ -91,6 +85,7 @@ function DataTablePage<T extends TableRow>({
     };
 
 
+
     useImperativeHandle(ref, () => ({
         getData,
     }));
@@ -100,72 +95,20 @@ function DataTablePage<T extends TableRow>({
         getData(params);
     }, [searchParams]);
 
-    const columns: GridColDef[] = useMemo(() => {
-        const defaultActions: GridColDef[] = viewOnly ? [] : [
-            {
-                field: 'operation',
-                headerName: '操作',
-                width: extendActions ? 150 : 150,
-                headerAlign: 'center',
-                sortable: false,          // 關閉排序
-                filterable: false,        // 關閉過濾
-                disableColumnMenu: true,  // 禁用列選單
-                renderCell: (params) => (
-                    <>
-                        {extendActions && extendActions(params)}
-                        <Button
-                            size='small'
-                            color="secondary"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit?.(params.row);
-                            }}
-                        >
-                            編輯
-                        </Button>
-                        <Button
-                            size='small'
-                            color="error"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete?.(params.row);
-                            }}
-                        >
-                            刪除
-                        </Button>
-                    </>
-                ),
-            }
-        ]
-        return [
-            ...defaultActions,
-            ...Object.keys(dataType).map<GridColDef>((key) => {
-                let width = String(dataType[key]).length * 25;
-                // 設定特定欄位 寬度
-                switch (key) {
-                    case "address":
-                        width = 150;
-                        break;
-                    case "county":
-                    case "district":
-                        width = 70;
-                        break;
-                    case "name":
-                        width = 100;
-                        break;
-                }
-                const baseCol: GridColDef = {
-                    field: key,
-                    headerName: dataType[key],
-                    minWidth: width
-                };
-                return customRenderers[key]
-                    ? { ...baseCol, valueGetter: customRenderers[key] }
-                    : baseCol;
-            }),
-            ...extendColumns,
-        ]
-    }, [customRenderers]);
+    const columns: GridColDef[] = useMemo(() => [
+        ...Object.keys(dataType).map<GridColDef>((key) => {
+            const width = String(dataType[key]).length * 20;
+            const baseCol: GridColDef = {
+                field: key,
+                headerName: dataType[key],
+                minWidth: width,
+            };
+            return customColumns[key]
+                ? { ...baseCol, ...customColumns[key] }
+                : baseCol;
+        }),
+        ...extendColumns,
+    ], [customColumns]);
 
     const onSearch = () => {
         getData(paramsData);
@@ -182,18 +125,14 @@ function DataTablePage<T extends TableRow>({
                 <Box sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    marginBottom: 1,
-                }}>
-                    <Box sx={{ marginRight: 1 }} hidden={viewOnly}>
-                        <Button
-                            startIcon={<IoMdAdd />}
-                            variant='contained'
-                            color='info'
-                            onClick={onAdd}
-                            component="div"
-                        >新增</Button>
+                    marginBottom: advance ? 3 : 1,
+                }}
+                    hidden={paramFieldsHandle.length == 0}
+                >
+                    <Box sx={{ marginRight: 1 }}>
+
                     </Box>
-                    <Box hidden={paramFieldsHandle.length == 0}>
+                    <Box>
                         <Box
                             sx={{
                                 display: 'inline-flex',
@@ -222,7 +161,7 @@ function DataTablePage<T extends TableRow>({
                             </Button>
                         </Box>
                         <Button
-
+                            hidden={paramFieldsHandle.length == 0}
                             endIcon={advance ? <IoMdArrowUp /> : <IoMdArrowDown />}
                             variant='text'
                             color='info'
@@ -234,9 +173,6 @@ function DataTablePage<T extends TableRow>({
                 <Collapse in={paramFieldsHandle.length > 0 && advance}>
                     <Grid2
                         container spacing={2}
-                        border={1}
-                        borderColor="divider"
-                        p={1}
                     >
                         <FieldTool
                             fieldsData={paramsData}
@@ -247,7 +183,7 @@ function DataTablePage<T extends TableRow>({
                     </Grid2>
                 </Collapse>
             </Grid2>
-            <DataTable<T> columns={columns} rows={rows} />
+            <DataTable<T> columns={columns} rows={rows} checkbox multiSelect={multiSelect} />
         </>
     );
 }

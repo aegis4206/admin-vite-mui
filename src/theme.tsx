@@ -4,6 +4,9 @@ import { red } from '@mui/material/colors';
 // A custom theme for this app
 const theme = createTheme({
   cssVariables: true,
+  typography: {
+    fontFamily: '"DIN",sans-serif',
+  },
   palette: {
     primary: {
       main: '#004523',

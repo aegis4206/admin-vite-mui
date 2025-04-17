@@ -12,8 +12,8 @@ export interface ApiResponse<T> {
   [key: string]: unknown;
 }
 export interface FetchActionsType<T> {
-  get: (param?: Record<string, string>) => Promise<ApiResponse<T>>;
-  post: (body: T) => Promise<ApiResponse<T>>;
-  put: (body: T) => Promise<ApiResponse<T>>;
-  delete: (body: T) => Promise<ApiResponse<T>>;
+  get: (param?: Record<string, string> | string) => Promise<ApiResponse<T>>;
+  post: (body: T, forSpecificUrl?: string) => Promise<ApiResponse<T>>;
+  put: (body: T, forSpecificUrl?: string) => Promise<ApiResponse<T>>;
+  delete: (body: T, forSpecificUrl?: string) => Promise<ApiResponse<T>>;
 }

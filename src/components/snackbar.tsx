@@ -20,7 +20,11 @@ export default function Snackbars() {
     };
 
     return (<>
-        {snackBarOptions && <Snackbar open={snackBarOptions.open} autoHideDuration={3000} onClose={handleClose}>
+        {snackBarOptions && <Snackbar 
+        open={snackBarOptions.open} 
+        autoHideDuration={3000} 
+        onClose={handleClose}
+        >
             <Alert
                 onClose={handleClose}
                 severity={snackBarOptions.severity || "info"}

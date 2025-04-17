@@ -21,11 +21,12 @@ import { Link } from 'react-router-dom';
 import { Backdrop, CircularProgress, Grid2 } from '@mui/material';
 import Snackbars from '../components/snackbar';
 import { loadingAtom } from '../states/global';
-import { drawerShow } from '../states/global';
+import { drawerShowAtom } from '../states/global';
 import { useAtom } from "jotai";
 // import logo from '../assets/logo.png';
 import logo_white from '../assets/logo_white.svg';
 import { useTranslation } from 'react-i18next';
+import ModalMessage from '../components/modalMessage';
 
 const drawerWidth: number = 240;
 
@@ -120,7 +121,7 @@ export default function Dashboard(
 ) {
 
   const [loading,] = useAtom(loadingAtom);
-  const [open, setOpen] = useAtom(drawerShow);
+  const [open, setOpen] = useAtom(drawerShowAtom);
   const { i18n } = useTranslation();
 
   const toggleLanguage = () => {
@@ -258,6 +259,7 @@ export default function Dashboard(
         </Container>
       </Box>
       <Snackbars />
+      <ModalMessage />
       <Backdrop
         sx={{
           color: '#fff',

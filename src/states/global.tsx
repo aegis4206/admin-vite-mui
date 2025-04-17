@@ -3,4 +3,4 @@ import { SnackbBarOptionType } from "../types/global";
 
 export const loadingAtom = atom<boolean>(false);
 export const snackBarAtom = atom<SnackbBarOptionType>();
-export const drawerShow = atom<boolean>(false);
+export const drawerShowAtom = atom<boolean>(false);
