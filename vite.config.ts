@@ -11,5 +11,5 @@ export default defineConfig({
     outDir: "dist",
     assetsDir: "assets",
   },
-  assetsInclude: ['**/*.ttf'],
+  assetsInclude: ["**/*.ttf"],
 });

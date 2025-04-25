@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
@@ -10,14 +9,15 @@ import { BrowserRouter } from 'react-router-dom'
 import './utils/i18n';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <Provider>
-          <CssBaseline />
-          <App />
-        </Provider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+  // 暫時關閉嚴格模式
+  // <React.StrictMode>
+  <BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <Provider>
+        <CssBaseline />
+        <App />
+      </Provider>
+    </ThemeProvider>
+  </BrowserRouter>
+  // </React.StrictMode>,
 );

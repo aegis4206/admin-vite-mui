@@ -125,14 +125,14 @@ function DataTablePage<T extends TableRow>({
                 <Box sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    marginBottom: advance ? 3 : 1,
+                    marginBottom: 1,
                 }}
                     hidden={paramFieldsHandle.length == 0}
                 >
                     <Box sx={{ marginRight: 1 }}>
 
                     </Box>
-                    <Box>
+                    <Box hidden={paramFieldsHandle.length == 0}>
                         <Box
                             sx={{
                                 display: 'inline-flex',
@@ -173,6 +173,9 @@ function DataTablePage<T extends TableRow>({
                 <Collapse in={paramFieldsHandle.length > 0 && advance}>
                     <Grid2
                         container spacing={2}
+                        border={1}
+                        borderColor="divider"
+                        p={1}
                     >
                         <FieldTool
                             fieldsData={paramsData}

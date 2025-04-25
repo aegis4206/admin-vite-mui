@@ -25,5 +25,4 @@ dist-ssr
 
 # 排除env
 *.env
-*.env.*
 

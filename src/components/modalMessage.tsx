@@ -6,7 +6,7 @@ const style = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '50%',
+    width: 'auto',
     bgcolor: 'background.paper',
     border: '2px solid #000',
     boxShadow: 24,
@@ -32,9 +32,10 @@ const ModalMessage = () => {
     return (
         <Modal
             open={modalMessage.open}
-            onClose={() => handleModalShow(false)}
+            // onClose={() => handleModalShow(false)}
             aria-labelledby="modal-modal-title"
             aria-describedby="modal-modal-description"
+            closeAfterTransition
         >
             <Box sx={style} component="form" onSubmit={handleSubmit}
                 id='modal-form'  >
