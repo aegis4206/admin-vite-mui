@@ -7,11 +7,15 @@ const style = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: 'auto',
+    height: 'auto',
     bgcolor: 'background.paper',
     border: '2px solid #000',
     boxShadow: 24,
     p: 4,
     borderRadius: "10px",
+    maxHeight: "95vh",
+    overflowY: 'auto',
+    maxWidth: '70vw',
 };
 
 const ModalMessage = () => {
@@ -20,11 +24,13 @@ const ModalMessage = () => {
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        modalMessage?.onSubmit(event);
+        if (!modalMessage?.onSubmit) return
+        modalMessage.onSubmit(event);
+        handleModalShow(false);
     };
 
     const handleModalShow = (open: boolean) => {
-        setModalMessage((pre) => pre ? { ...pre, open } : undefined)
+        setModalMessage((pre) => ({ ...pre, open }))
     }
 
     if (!modalMessage) return <></>;
@@ -48,7 +54,7 @@ const ModalMessage = () => {
                         display: "flex",
                         justifyContent: "flex-end",
                         gap: 2,
-                        mt: 2,
+                        mt: 4,
                     }}
                 >
                     <Button

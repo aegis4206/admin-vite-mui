@@ -267,7 +267,7 @@ export default function Dashboard(
         }}
         open={loading}
       >
-        <CircularProgress color="inherit" />
+        <CircularProgress color="primary" />
       </Backdrop>
     </Box>
   );

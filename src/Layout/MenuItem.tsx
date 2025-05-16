@@ -38,7 +38,7 @@ const MenuItemComponent: React.FC<{
         <>
             <ListItemButton
                 sx={{
-                    pl: level == 0 ? null : level * 3,
+                    pl: level == 0 ? null : level + 2,
                     maxWidth: "100%",
                     "& .MuiListItemText-root": {
                         whiteSpace: "nowrap",

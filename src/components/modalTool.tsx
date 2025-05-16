@@ -10,7 +10,7 @@ const style = {
     top: '2.5vh',
     left: '10%',
     // transform: 'translate(-50%, -50%)',
-    width: '80%',
+    width: '80vw',
     bgcolor: 'background.paper',
     border: '2px solid #000',
     boxShadow: 24,
@@ -42,7 +42,7 @@ const ModalTool = <T,>({ open, setOpen, children, title, onSubmit, fields = [], 
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        console.log(formData)
+        // console.log(formData)
         if (!fieldToolRef.current?.validation()) return;
 
         onSubmit(event);

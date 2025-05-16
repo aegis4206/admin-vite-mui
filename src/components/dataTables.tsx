@@ -1,9 +1,8 @@
-import { DataGrid, GridColDef, GridRowSelectionModel, useGridApiRef } from '@mui/x-data-grid';
-import { useAtom } from "jotai";
-import { checkboxSelectedAtom, gridApiRefAtom } from '../states/table';
-import { RefObject, useEffect, useMemo } from 'react';
+import { DataGrid, GridColDef, GridPaginationModel, GridRowSelectionModel, useGridApiRef } from '@mui/x-data-grid';
+import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GridApiCommunity } from '@mui/x-data-grid/internals';
+import CustomPagination from './customPagination';
 
 interface TableRow {
     id?: string | number;
@@ -16,29 +15,35 @@ interface DataTableProps<T extends TableRow> {
     rows: T[];
     checkbox?: boolean;
     multiSelect?: boolean;
+    gridApiRef?: RefObject<GridApiCommunity | null> | null;
+    paginationMode?: boolean;
+    paginationRowCount?: number;
+    paginationModel?: GridPaginationModel;
+    setPaginationModel?: Dispatch<SetStateAction<GridPaginationModel>>
 }
 
-export default function DataTable<T extends TableRow>({ columns, rows, checkbox = false, multiSelect = false }: DataTableProps<T>) {
-    const [checkboxSelected, setCheckboxSelected] = useAtom(checkboxSelectedAtom)
-    const [, setGridApiRef] = useAtom(gridApiRefAtom)
+export default function DataTable<T extends TableRow>({ columns, rows, checkbox = false, multiSelect = false, gridApiRef = null, paginationMode = false, paginationRowCount = 0, paginationModel, setPaginationModel }: DataTableProps<T>) {
+    const [checkboxSelected, setCheckboxSelected] = useState<GridRowSelectionModel>([]);
+    // const [, setGridApiRef] = useAtom(gridApiRefAtom)
     const { t, i18n } = useTranslation();
     const tableRef: RefObject<GridApiCommunity> = useGridApiRef();
 
     useEffect(() => {
-        setGridApiRef(tableRef);
+        if (!gridApiRef) return;
+        gridApiRef.current = tableRef.current;
+
         return () => {
-            setGridApiRef(null);
-            setCheckboxSelected([]);
         }
-    }, [tableRef, setGridApiRef]);
+    }, [tableRef, gridApiRef]);
 
     const selectChangeHandle = (newSelectionModel: GridRowSelectionModel) => {
         if (!checkbox) return;
-        if (!multiSelect && newSelectionModel.length > 1) {
-            setCheckboxSelected([newSelectionModel[1]]);
-        } else {
-            setCheckboxSelected(newSelectionModel);
-        }
+        // if (!multiSelect && newSelectionModel.length > 1) {
+        //     setCheckboxSelected([newSelectionModel[1]]);
+        // } else {
+        //     setCheckboxSelected(newSelectionModel);
+        // }
+        setCheckboxSelected(newSelectionModel);
     }
 
     const localeText = useMemo(() => ({
@@ -131,7 +136,7 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
 
 
     return (
-        <div style={{ width: '100%', maxHeight: '70vh' }}>
+        <div style={{ width: '100%' }}>
             <DataGrid
                 apiRef={tableRef}
                 rows={rows}
@@ -139,16 +144,20 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 initialState={{
                     pagination: {
                         paginationModel: { page: 0, pageSize: 10 },
-
                     },
                 }}
                 pageSizeOptions={[5, 10, 20, 50, 100]}
                 slotProps={{
                     pagination: {
                         showFirstButton: true,
-                        showLastButton: true,
+                        // showLastButton: true,
+
                     },
                 }}
+                slots={{
+                    pagination: CustomPagination,
+                }}
+                disableMultipleRowSelection={!multiSelect}
                 checkboxSelection={checkbox}
                 onRowSelectionModelChange={!checkbox ? undefined : selectChangeHandle}
                 rowSelectionModel={!checkbox ? undefined : checkboxSelected}
@@ -158,6 +167,7 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 }}
                 sx={{
                     minWidth: '50px',
+                    overflowY: 'auto',
                     '& .MuiDataGrid-cell': {
                         whiteSpace: 'normal',
                         wordWrap: 'break-word',
@@ -203,6 +213,15 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                     },
                 }}
                 getRowHeight={() => 'auto'}
+
+                // 分頁設定
+                paginationModel={paginationMode ? paginationModel : undefined}
+                onPaginationModelChange={paginationMode ? setPaginationModel : undefined}
+                paginationMode={paginationMode ? "server" : undefined}
+                rowCount={paginationMode ? paginationRowCount : undefined}
+                // disableColumnMenu={paginationMode}
+                disableColumnFilter={paginationMode}
+                disableColumnSorting={paginationMode}
             // onCellEditStop={(cell) => rowChangeHandle(cell, "cell")}
             />
         </div >

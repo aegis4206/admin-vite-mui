@@ -5,4 +5,4 @@ import { RefObject } from "react";
 
 
 export const checkboxSelectedAtom = atom<GridRowSelectionModel>([]);
-export const gridApiRefAtom = atom<RefObject<GridApiCommunity | null> | null>();
+export const gridApiRefAtom = atom<RefObject<GridApiCommunity> | null>();

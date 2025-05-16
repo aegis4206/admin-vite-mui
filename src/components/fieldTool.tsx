@@ -29,13 +29,15 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
             acc[field.name as string] = "";
             return acc;
         }, {} as Record<string, string>)
-    }, [fields])
+    }, [])
     const [errors, setErrors] = useState<Record<string, string>>(errorsInit);
 
     const handleFieldChange = (name: keyof T, value: number | string) => {
         if (!setFieldsData) return;
         setFieldsData((prev) => {
             const tempFields = { ...prev }
+
+            // 將select的id option label塞入name
             const target = fields.find(field => field.name === name)
             const checkSelect = target?.type === "select"
             if (checkSelect) {
@@ -147,7 +149,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
         setErrors(errorsInit);
         return () => {
         }
-    }, [fieldsData, errorsInit])
+    }, [fieldsData])
 
     const customTextField = (field: ModalFieldConfig, smGrid: number = 4) => {
         let sm;

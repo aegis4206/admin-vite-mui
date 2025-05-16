@@ -1,5 +1,5 @@
 // components/DataTablePage.tsx
-import { useState, useEffect, useMemo, useImperativeHandle, RefObject } from 'react';
+import { useState, useMemo, useImperativeHandle, RefObject, useEffect } from 'react';
 import { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box, Button, Collapse, Grid2 } from '@mui/material';
 import DataTable from './dataTables';
@@ -9,8 +9,9 @@ import { ModalFieldConfig } from '../types/modal';
 import { IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
 import { CiSearch, CiEraser } from "react-icons/ci";
 import { useSearchParams } from 'react-router-dom';
+import { GridApiCommunity } from '@mui/x-data-grid/internals';
 
-interface DataTablePageProps<T> {
+interface SelectTablePageProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
     customColumns?: {
@@ -21,9 +22,11 @@ interface DataTablePageProps<T> {
     paramFields?: ModalFieldConfig[];
     extendActions?: (params: GridRenderCellParams) => React.ReactNode;
     multiSelect?: boolean;
+    gridApiRef?: RefObject<GridApiCommunity | null> | null;
+    getParams?: Record<string, string>;
 }
 
-function DataTablePage<T extends TableRow>({
+function SelectTablePage<T extends TableRow>({
     dataType,
     fetchApi,
     customColumns = {},
@@ -31,13 +34,15 @@ function DataTablePage<T extends TableRow>({
     ref,
     paramFields = [],
     multiSelect = false,
-}: DataTablePageProps<T>) {
+    gridApiRef = null,
+    getParams = {},
+}: SelectTablePageProps<T>) {
     const paramsDataInit = useMemo(() => paramFields.reduce((acc, field) => {
         acc[field.name] = "";
         return acc;
-    }, {} as Record<string, string>), [paramFields]);
+    }, {} as Record<string, string>), []);
     const [rows, setRows] = useState<T[]>([]);
-    const [paramsData, setParamsData] = useState<Record<string, string>>(paramsDataInit);
+    const [paramsData, setParamsData] = useState<Record<string, string>>({});
     const [advance, setAdvance] = useState(false);
     const [searchParams] = useSearchParams();
 
@@ -47,7 +52,7 @@ function DataTablePage<T extends TableRow>({
             const newField = { ...field };
             delete newField.disabled;
             return newField;
-        }), [paramFields]);
+        }), []);
 
 
     const api = fetchApi();
@@ -64,12 +69,19 @@ function DataTablePage<T extends TableRow>({
                 setParamsData(params);
                 setAdvance(true);
                 return params;
+            } else if (Object.keys(getParams).length > 0) {
+                const params: Record<string, string> = { ...paramsDataInit };
+                Object.keys(getParams).forEach((key) => {
+                    params[key] = getParams[key];
+                });
+                setParamsData(params);
+                return params;
             } else {
                 setParamsData(paramsDataInit);
-                setAdvance(false);
+                return paramsDataInit;
             }
         },
-        [searchParams]
+        []
     )
 
 
@@ -93,7 +105,7 @@ function DataTablePage<T extends TableRow>({
     useEffect(() => {
         const params = searchParamsHandle;
         getData(params);
-    }, [searchParams]);
+    }, []);
 
     const columns: GridColDef[] = useMemo(() => [
         ...Object.keys(dataType).map<GridColDef>((key) => {
@@ -108,15 +120,16 @@ function DataTablePage<T extends TableRow>({
                 : baseCol;
         }),
         ...extendColumns,
-    ], [customColumns]);
+    ], []);
 
     const onSearch = () => {
         getData(paramsData);
     }
 
     const onParamsClear = () => {
-        setParamsData(paramsDataInit);
-        getData(paramsDataInit);
+        const params = searchParamsHandle;
+        setParamsData(params);
+        getData(params);
     }
 
     return (
@@ -157,7 +170,7 @@ function DataTablePage<T extends TableRow>({
                                 color="warning"
                                 onClick={onParamsClear}
                                 startIcon={<CiEraser />}>
-                                清除
+                                復原
                             </Button>
                         </Box>
                         <Button
@@ -186,9 +199,15 @@ function DataTablePage<T extends TableRow>({
                     </Grid2>
                 </Collapse>
             </Grid2>
-            <DataTable<T> columns={columns} rows={rows} checkbox multiSelect={multiSelect} />
+            <DataTable<T>
+                columns={columns}
+                rows={rows}
+                checkbox
+                multiSelect={multiSelect}
+                gridApiRef={gridApiRef}
+            />
         </>
     );
 }
 
-export default DataTablePage;
+export default SelectTablePage;

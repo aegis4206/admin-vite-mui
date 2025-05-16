@@ -95,6 +95,7 @@ const resources = {
           "getItemAriaLabel.last": "Go to last page",
           "getItemAriaLabel.next": "Go to next page",
           "getItemAriaLabel.previous": "Go to previous page",
+          labelGotoPage: "Go to {{page}} page",
         },
       },
       datePicker: {
@@ -205,6 +206,7 @@ const resources = {
           "getItemAriaLabel.last": "前往最後一頁",
           "getItemAriaLabel.next": "前往下一頁",
           "getItemAriaLabel.previous": "前往上一頁",
+          labelGotoPage: "前往第{{page}}頁",
         },
       },
       datePicker: {

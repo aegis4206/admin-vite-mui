@@ -19,7 +19,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             setLoading(true)
             setTimeout(() => {
                 controller.abort();
-            }, 2000);
+            }, 30000);
             let paramUrl = SpecificUrl ?? "";
             switch (method) {
                 case "GET":
@@ -47,6 +47,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
                 body: body ? JSON.stringify(body) : null,
                 signal: controller.signal
@@ -62,11 +63,11 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 }
 
                 // 排除object的情況 將object轉為array
-                if (!Array.isArray(data.data)) {
-                    const tempData = [];
-                    tempData.push(data.data as T);
-                    return { ...data, data: tempData };
-                };
+                // if (!Array.isArray(data.data)) {
+                //     const tempData = [];
+                //     tempData.push(data.data as T);
+                //     return { ...data, data: tempData };
+                // };
 
                 if (method !== "GET") {
                     setSnackBar({ open: true, message: '操作成功', severity: 'success' });

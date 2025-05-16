@@ -1,6 +1,6 @@
 // components/DataTablePage.tsx
-import { useState, useEffect, useMemo, useImperativeHandle, RefObject } from 'react';
-import { GridColDef, GridRenderCellParams, GridValueGetter } from '@mui/x-data-grid';
+import { useState, useMemo, useImperativeHandle, RefObject, useEffect } from 'react';
+import { GridColDef, GridPaginationModel, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box, Button, Collapse, Grid2 } from '@mui/material';
 import DataTable from './dataTables';
 import { FetchActionsType, TableRow } from '../types/fetch';
@@ -9,12 +9,13 @@ import { ModalFieldConfig } from '../types/modal';
 import { IoMdAdd, IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
 import { CiSearch, CiEraser } from "react-icons/ci";
 import { useSearchParams } from 'react-router-dom';
+import { GridApiCommunity } from '@mui/x-data-grid/internals';
 
 interface DataTablePageProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
     customRenderers?: {
-        [key: string]: (param: GridValueGetter, row?: T) => string;
+        [key: string]: GridColDef;
     };
     onAdd?: () => void;
     onEdit?: (row: T) => void;
@@ -24,6 +25,12 @@ interface DataTablePageProps<T> {
     paramFields?: ModalFieldConfig[];
     extendActions?: (params: GridRenderCellParams) => React.ReactNode;
     viewOnly?: boolean;
+    extendButtons?: React.ReactNode;
+    getParams?: Record<string, string>;
+    selectMode?: boolean;
+    paginationMode?: boolean;
+    multiSelect?: boolean;
+    gridApiRef?: RefObject<GridApiCommunity | null> | null;
 }
 
 function DataTablePage<T extends TableRow>({
@@ -38,25 +45,67 @@ function DataTablePage<T extends TableRow>({
     paramFields = [],
     extendActions,
     viewOnly = false,
+    extendButtons = <></>,
+    getParams = {},
+    selectMode = false,
+    paginationMode = false,
+    multiSelect = false,
+    gridApiRef = null,
 }: DataTablePageProps<T>) {
-    const paramsDataInit = useMemo(() => paramFields.reduce((acc, field) => {
-        acc[field.name] = "";
-        return acc;
-    }, {} as Record<string, string>), [paramFields]);
     const [rows, setRows] = useState<T[]>([]);
-    const [paramsData, setParamsData] = useState<Record<string, string>>(paramsDataInit);
+    const [paramsData, setParamsData] = useState<Record<string, string>>({});
     const [advance, setAdvance] = useState(false);
     const [searchParams] = useSearchParams();
+    const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
+        page: 0,
+        pageSize: 10,
+    });
+    const [paginationRowCount, setPaginationRowCount] = useState(0);
 
-    const paramFieldsHandle = useMemo(() => paramFields.filter((field) => field.param).
-        map(field => {
-            const newField = { ...field };
-            delete newField.disabled;
-            return newField;
-        }), [paramFields]);
+    const paramsDataInit = useMemo(() => {
+        const tempFieldsData = paramFields.reduce((acc, field) => {
+            acc[field.name] = "";
+            return acc;
+        }, {} as Record<string, string>)
+        // 處理處理sortFieldsData
+        const sortFieldsData: Record<string, string> = paginationMode ? {
+            sortBy: "",
+            sortOrder: "",
+        } : {}
+        return { ...tempFieldsData, ...sortFieldsData };
+    }, []);
+
+    const paramFieldsHandle = useMemo(() => {
+        const tempFields = paramFields.filter((field) => field.param).
+            map(field => {
+                const newField = { ...field };
+                delete newField.disabled;
+                return newField;
+            })
+
+        // 處理sortFields
+        const sortedFields: ModalFieldConfig[] = paginationMode ? [
+            {
+                name: "sortBy", label: "排序欄位", type: "select", param: true,
+                options: tempFields.map((field) => ({
+                    label: field.label,
+                    value: field.name,
+                }))
+            },
+            {
+                name: "sortOrder", label: "排序方式", type: "select", param: true, options: [
+                    { label: "升冪", value: "asc" },
+                    { label: "降冪", value: "desc" },
+                ]
+            },
+        ] : []
+
+        return [...tempFields, ...sortedFields];
+    }, []);
 
 
     const api = fetchApi();
+
 
     const searchParamsHandle = useMemo(
         () => {
@@ -70,12 +119,19 @@ function DataTablePage<T extends TableRow>({
                 setParamsData(params);
                 setAdvance(true);
                 return params;
+            } else if (Object.keys(getParams).length > 0) {
+                const params: Record<string, string> = { ...paramsDataInit };
+                Object.keys(getParams).forEach((key) => {
+                    params[key] = getParams[key];
+                });
+                setParamsData(params);
+                return params;
             } else {
                 setParamsData(paramsDataInit);
-                setAdvance(false);
+                return paramsDataInit;
             }
         },
-        [searchParams]
+        []
     )
 
 
@@ -84,9 +140,27 @@ function DataTablePage<T extends TableRow>({
         const filteredParams = Object.fromEntries(
             Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
         );
+        if (paginationMode) {
+            filteredParams.per_page = paginationModel.pageSize.toString();
+            filteredParams.page = (paginationModel.page + 1).toString();
+        }
         const result = await api.get(filteredParams);
         if (result.success) {
-            setRows((result.data ?? []) as T[]);
+            if (paginationMode) {
+                setRows(
+                    result.data && 'items' in result.data && Array.isArray(result.data.items)
+                        ? result.data.items as T[]
+                        : []
+                );
+                setPaginationRowCount(
+                    result.data && 'pagination' in result.data && typeof result.data.pagination === 'object' && 'total' in (result.data.pagination as { total: number })
+                        ? (result.data.pagination as { total: number }).total
+                        : 0
+                );
+            } else {
+                setRows((result.data ?? []) as T[]);
+
+            }
         }
     };
 
@@ -97,11 +171,15 @@ function DataTablePage<T extends TableRow>({
 
     useEffect(() => {
         const params = searchParamsHandle;
-        getData(params);
-    }, [searchParams]);
+        setParamsData(params);
+    }, []);
+
+    useEffect(() => {
+        getData();
+    }, [paginationModel]);
 
     const columns: GridColDef[] = useMemo(() => {
-        const defaultActions: GridColDef[] = viewOnly ? [] : [
+        const defaultActions: GridColDef[] = viewOnly || selectMode ? [] : [
             {
                 field: 'operation',
                 headerName: '操作',
@@ -138,6 +216,7 @@ function DataTablePage<T extends TableRow>({
             }
         ]
         return [
+            ...extendColumns,
             ...defaultActions,
             ...Object.keys(dataType).map<GridColDef>((key) => {
                 let width = String(dataType[key]).length * 25;
@@ -153,6 +232,9 @@ function DataTablePage<T extends TableRow>({
                     case "name":
                         width = 100;
                         break;
+                    case "filePath":
+                        width = 150;
+                        break;
                 }
                 const baseCol: GridColDef = {
                     field: key,
@@ -160,20 +242,34 @@ function DataTablePage<T extends TableRow>({
                     minWidth: width
                 };
                 return customRenderers[key]
-                    ? { ...baseCol, valueGetter: customRenderers[key] }
+                    ? { ...baseCol, ...customRenderers[key] }
                     : baseCol;
             }),
-            ...extendColumns,
         ]
-    }, [customRenderers]);
+    }, []);
 
     const onSearch = () => {
-        getData(paramsData);
+        if (paginationMode) {
+            setPaginationModel({
+                page: 0,
+                pageSize: paginationModel.pageSize,
+            });
+        } else {
+            getData(paramsData);
+        }
     }
 
     const onParamsClear = () => {
-        setParamsData(paramsDataInit);
-        getData(paramsDataInit);
+        const params = searchParamsHandle;
+        setParamsData(params);
+        if (paginationMode) {
+            setPaginationModel({
+                page: 0,
+                pageSize: paginationModel.pageSize,
+            });
+        } else {
+            getData(params);
+        }
     }
 
     return (
@@ -184,14 +280,17 @@ function DataTablePage<T extends TableRow>({
                     justifyContent: "space-between",
                     marginBottom: 1,
                 }}>
-                    <Box sx={{ marginRight: 1 }} hidden={viewOnly}>
-                        <Button
-                            startIcon={<IoMdAdd />}
-                            variant='contained'
-                            color='info'
-                            onClick={onAdd}
-                            component="div"
-                        >新增</Button>
+                    <Box sx={{ marginRight: 1 }} hidden={viewOnly || selectMode}>
+                        <Grid2 container spacing={1}>
+                            <Button
+                                startIcon={<IoMdAdd />}
+                                variant='contained'
+                                color='info'
+                                onClick={onAdd}
+                                component="div"
+                            >新增</Button>
+                            {extendButtons}
+                        </Grid2>
                     </Box>
                     <Box hidden={paramFieldsHandle.length == 0}>
                         <Box
@@ -243,11 +342,20 @@ function DataTablePage<T extends TableRow>({
                             setFieldsData={setParamsData}
                             fields={paramFieldsHandle}
                         />
-
                     </Grid2>
                 </Collapse>
             </Grid2>
-            <DataTable<T> columns={columns} rows={rows} />
+            <DataTable<T>
+                columns={columns}
+                rows={rows}
+                paginationMode={paginationMode}
+                paginationRowCount={paginationRowCount}
+                paginationModel={paginationModel}
+                setPaginationModel={setPaginationModel}
+                checkbox={selectMode}
+                multiSelect={multiSelect}
+                gridApiRef={gridApiRef} />
+
         </>
     );
 }

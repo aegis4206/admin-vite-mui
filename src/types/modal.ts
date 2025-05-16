@@ -16,13 +16,13 @@ export interface ModalFieldConfig {
   validation?: ("isEmpty" | "isPositiveInteger")[];
   param?: boolean;
   smGrid?: number;
-  [key: string]: unknown;
+  // [key: string]: unknown;
 }
 
 export interface ModalMessageProps<T> {
   open: boolean;
-  title: string;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  title?: string;
+  onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
   formData?: T;
   children?: ReactNode;
 }
