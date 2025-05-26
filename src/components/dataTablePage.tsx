@@ -61,6 +61,18 @@ function DataTablePage<T extends TableRow>({
         pageSize: 10,
     });
     const [paginationRowCount, setPaginationRowCount] = useState(0);
+    const columnWidth: Record<string, string> = useMemo(() => {
+        const columnWidthList = localStorage.getItem("columnWidth");
+        if (columnWidthList) {
+            try {
+                const parsedColumnWidth = JSON.parse(columnWidthList);
+                return parsedColumnWidth;
+            } catch (error) {
+                console.error("Error parsing columnWidth from localStorage:", error);
+            }
+        }
+        return {};
+    }, []);
 
     const paramsDataInit = useMemo(() => {
         const tempFieldsData = paramFields.reduce((acc, field) => {
@@ -239,7 +251,8 @@ function DataTablePage<T extends TableRow>({
                 const baseCol: GridColDef = {
                     field: key,
                     headerName: dataType[key],
-                    minWidth: width
+                    // 判斷columnWidth是否存在 載入記錄寬度
+                    width: columnWidth[key] ? Number(columnWidth[key]) : width,
                 };
                 return customRenderers[key]
                     ? { ...baseCol, ...customRenderers[key] }

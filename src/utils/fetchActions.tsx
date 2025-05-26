@@ -17,6 +17,8 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
 
         try {
             setLoading(true)
+            const isFormData = body instanceof FormData;
+
             setTimeout(() => {
                 controller.abort();
             }, 30000);
@@ -35,7 +37,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 case "PUT":
                 case "DELETE":
                     if (body) {
-                        paramUrl = `/${(body as unknown as Record<string, unknown>).id}`;
+                        paramUrl = isFormData ? `/${body.get("id")}` : `/${(body as unknown as Record<string, unknown>).id}`;
                     }
                     break
             }
@@ -43,13 +45,19 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 paramUrl = `${SpecificUrl}`;
             }
 
+            if (method === "PUT" && isFormData) {
+                body.append('_method', "put");
+            }
+
             const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${paramUrl}`, {
-                method,
+                method: (method === "PUT" && isFormData) ? "POST" : method,
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    ...isFormData
+                        ? undefined
+                        : { 'Content-Type': 'application/json' }
                 },
-                body: body ? JSON.stringify(body) : null,
+                body: isFormData ? body : JSON.stringify(body),
                 signal: controller.signal
             });
 

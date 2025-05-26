@@ -58,12 +58,14 @@ const CustomTablePagination = () => {
     return (
         <Box
             display="flex"
-            justifyContent="space-between"
+            justifyContent="end"
+            width='100%'
             alignItems="center"
             padding="10px"
+            sx={{ flex: 1 }}
         >
             {/* Rows per page selector */}
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" >
                 <Typography variant="body2" mr={1}>
                     {localeText.labelRowsPerPage}
                 </Typography>

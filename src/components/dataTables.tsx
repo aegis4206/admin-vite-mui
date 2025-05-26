@@ -1,4 +1,4 @@
-import { DataGrid, GridColDef, GridPaginationModel, GridRowSelectionModel, useGridApiRef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridColumnResizeParams, GridPaginationModel, GridRowSelectionModel, useGridApiRef } from '@mui/x-data-grid';
 import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GridApiCommunity } from '@mui/x-data-grid/internals';
@@ -133,7 +133,19 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
     // const rowChangeHandle = (newSelectionModel: unknown, type: string) => {
     //     console.log(type, newSelectionModel);
     // }
-
+    const onColumnWidthChange = (params: GridColumnResizeParams) => {
+        const columnWidthList = localStorage.getItem("columnWidth");
+        if (columnWidthList) {
+            try {
+                const newColumnWidthList = JSON.parse(columnWidthList);
+                localStorage.setItem("columnWidth", JSON.stringify({ ...newColumnWidthList, [params.colDef.field]: params.width }));
+            } catch (error) {
+                console.error("Error parsing columnWidthList from localStorage:", error);
+            }
+        } else {
+            localStorage.setItem("columnWidth", JSON.stringify({ [params.colDef.field]: params.width }));
+        }
+    }
 
     return (
         <div style={{ width: '100%' }}>
@@ -146,13 +158,13 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                         paginationModel: { page: 0, pageSize: 10 },
                     },
                 }}
-                pageSizeOptions={[5, 10, 20, 50, 100]}
+                // pageSizeOptions={[5, 10, 20, 50, 100]}
                 slotProps={{
-                    pagination: {
-                        showFirstButton: true,
-                        // showLastButton: true,
+                    // pagination: {
+                    // showFirstButton: true,
+                    // showLastButton: true,
 
-                    },
+                    // },
                 }}
                 slots={{
                     pagination: CustomPagination,
@@ -222,7 +234,11 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 // disableColumnMenu={paginationMode}
                 disableColumnFilter={paginationMode}
                 disableColumnSorting={paginationMode}
-            // onCellEditStop={(cell) => rowChangeHandle(cell, "cell")}
+                // onCellEditStop={(cell) => rowChangeHandle(cell, "cell")}
+
+                // 處理欄位寬度變化
+                onColumnWidthChange={onColumnWidthChange}
+
             />
         </div >
     );
