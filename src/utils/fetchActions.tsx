@@ -49,17 +49,23 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 body.append('_method', "put");
             }
 
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${paramUrl}`, {
+            const loginInfo = JSON.parse(localStorage.getItem('loginInfo') || '{}');
+
+            const headers: Record<string, string> = {
+                'Authorization': `Bearer ${loginInfo.token || ''}`,
+            };
+            if (!isFormData) {
+                headers['Content-Type'] = 'application/json';
+            }
+
+            const payload = {
                 method: (method === "PUT" && isFormData) ? "POST" : method,
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    ...isFormData
-                        ? undefined
-                        : { 'Content-Type': 'application/json' }
-                },
+                headers,
                 body: isFormData ? body : JSON.stringify(body),
                 signal: controller.signal
-            });
+            }
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${paramUrl}`, payload);
 
             const data: ApiResponse<T> = await res.json();
 
@@ -77,17 +83,18 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 //     return { ...data, data: tempData };
                 // };
 
-                if (method !== "GET") {
+                if (method !== "GET" && data.success) {
                     setSnackBar({ open: true, message: '操作成功', severity: 'success' });
                 }
 
                 return data;
             }
-            // else if (res.status === 401) {
-            //     setSnackBar({ open: true, message: 'Unauthorized', severity: 'error' });
-            //     // navigate('/login');
-            //     return { success: false, message: 'Unauthorized' };
-            // } else if (res.status === 422) {
+            else if (res.status === 401) {
+                setSnackBar({ open: true, message: 'Unauthorized', severity: 'error' });
+                // navigate('/login');
+                return { success: false, message: 'Unauthorized' };
+            } 
+            // else if (res.status === 422) {
             //     setSnackBar({ open: true, message: data.message || 'failedValidation', severity: 'error' });
             //     // navigate('/login');
             //     return { success: false, message: 'failedValidation' };

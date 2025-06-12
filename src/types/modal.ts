@@ -10,7 +10,8 @@ export interface ModalFieldConfig {
     | "date"
     | "password"
     | "custom"
-    | "address";
+    | "address"
+    | "divider";
   options?: { value: string | number; label: string }[];
   disabled?: boolean;
   validation?: ("isEmpty" | "isPositiveInteger")[];

@@ -14,16 +14,19 @@ import { GridApiCommunity } from '@mui/x-data-grid/internals';
 interface DataTablePageProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
+    // 自定義field渲染
     customRenderers?: {
         [key: string]: GridColDef;
     };
     onAdd?: () => void;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
+    // 追加extendColumns在表最前
     extendColumns?: GridColDef[];
     ref?: RefObject<{ getData: () => void } | null>;
     paramFields?: ModalFieldConfig[];
-    extendActions?: (params: GridRenderCellParams) => React.ReactNode;
+    // extendActions 非selectMode、viewOnly時 追加操作
+    extendActions?: (params: GridRenderCellParams) => React.ReactNode; 
     viewOnly?: boolean;
     extendButtons?: React.ReactNode;
     getParams?: Record<string, string>;
@@ -153,7 +156,7 @@ function DataTablePage<T extends TableRow>({
             Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
         );
         if (paginationMode) {
-            filteredParams.per_page = paginationModel.pageSize.toString();
+            filteredParams.perPage = paginationModel.pageSize.toString();
             filteredParams.page = (paginationModel.page + 1).toString();
         }
         const result = await api.get(filteredParams);
@@ -227,6 +230,7 @@ function DataTablePage<T extends TableRow>({
                 ),
             }
         ]
+       
         return [
             ...extendColumns,
             ...defaultActions,
@@ -293,7 +297,7 @@ function DataTablePage<T extends TableRow>({
                     justifyContent: "space-between",
                     marginBottom: 1,
                 }}>
-                    <Box sx={{ marginRight: 1 }} hidden={viewOnly || selectMode}>
+                    <Box sx={{ marginRight: 1 }} >
                         <Grid2 container spacing={1}>
                             <Button
                                 startIcon={<IoMdAdd />}
@@ -301,6 +305,7 @@ function DataTablePage<T extends TableRow>({
                                 color='info'
                                 onClick={onAdd}
                                 component="div"
+                                hidden={viewOnly || selectMode}
                             >新增</Button>
                             {extendButtons}
                         </Grid2>
@@ -361,6 +366,7 @@ function DataTablePage<T extends TableRow>({
             <DataTable<T>
                 columns={columns}
                 rows={rows}
+                setRows={setRows}
                 paginationMode={paginationMode}
                 paginationRowCount={paginationRowCount}
                 paginationModel={paginationModel}

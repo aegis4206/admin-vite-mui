@@ -6,7 +6,7 @@ import { useAtom } from "jotai";
 import { useState, useEffect } from "react";
 
 const Breadcrumbs = () => {
-    const [pathList, setpathList] = useState<MenuItem[]>([]);
+    const [pathList, setPathList] = useState<MenuItem[]>([]);
     const [list,] = useAtom<MenuItem[]>(sideBarMenuData)
     const location = useLocation();
     const pathnames = location.pathname.split("/").filter(x => x);
@@ -121,7 +121,7 @@ const Breadcrumbs = () => {
             if (!!pathnames && pathnames.length > 0) return findParentPath(list, pathnames.join("/"));
             return []
         };
-        setpathList(newPathList);
+        setPathList(newPathList);
         return () => {
 
         }
@@ -136,8 +136,10 @@ const Breadcrumbs = () => {
                 <Link to="/" className="text-sky-700">Home</Link>
                 {pathList.map((item, index) => {
                     // const includesId = item.path.split("/").slice(-1)[0] === ":id";
-                    const nolink = item.path === "" || !item.pageNode ;
-                    const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+                    const nolink = item.path === "" || !item.pageNode;
+                    // 處理網址參數
+                    const indexTarget = item.path.includes(":") ? index + 2 : index + 1;
+                    const to = `/${pathnames.slice(0, indexTarget).join("/")}`;
                     return nolink ? (
                         <span key={to}>{item.name}</span>
                     ) : (

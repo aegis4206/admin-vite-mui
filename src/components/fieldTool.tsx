@@ -1,4 +1,4 @@
-import { Divider, Grid2, IconButton, InputAdornment, MenuItem, TextField } from '@mui/material'
+import { Autocomplete, Divider, Grid2, IconButton, InputAdornment, MenuItem, TextField } from '@mui/material'
 import { Fragment, ReactNode, RefObject, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { ModalFieldConfig } from '../types/modal';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -32,25 +32,23 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
     }, [])
     const [errors, setErrors] = useState<Record<string, string>>(errorsInit);
 
-    const handleFieldChange = (name: keyof T, value: number | string) => {
+    const handleFieldChange = (field: ModalFieldConfig, value: number | string) => {
         if (!setFieldsData) return;
         setFieldsData((prev) => {
             const tempFields = { ...prev }
 
             // 將select的id option label塞入name
-            const target = fields.find(field => field.name === name)
-            const checkSelect = target?.type === "select"
-            if (checkSelect) {
-                const fieldName = (name as string).replace("Id", "Name")
+            if (field.type === "select" && typeof field.name === "string" && field.name.endsWith("Id")) {
+                const fieldName = (field.name as string).replace("Id", "Name")
                 return ({
                     ...tempFields,
-                    [fieldName]: target?.options?.find(option => option.value === value)?.label || "",
-                    [name]: value,
+                    [fieldName]: field.options?.find(option => option.value === value)?.label || "",
+                    [field.name]: value,
                 })
             }
             return ({
                 ...tempFields,
-                [name]: value === "Invalid Date" ? "" : value,
+                [field.name]: value === "Invalid Date" ? (field.type === "date" ? "" : value) : value,
             })
         });
     };
@@ -175,7 +173,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     name={field.name}
                     type={field.type === 'password' ? showPassword ? 'text' : 'password' : field.type}
                     value={fieldsData[field.name as keyof T] as string | number}
-                    onChange={(event) => handleFieldChange(field.name as keyof T, event.target.value)}
+                    onChange={(event) => handleFieldChange(field as ModalFieldConfig, event.target.value)}
                     fullWidth
                     disabled={field.disabled}
                     error={!!errors[field.name as string]}
@@ -232,13 +230,13 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     case "select":
                         return (
                             <Grid2 size={{ xs: 12, sm: 4 }} key={field.name}>
-                                <TextField
+                                {/* <TextField
                                     label={field.label}
                                     name={field.name}
                                     select
                                     fullWidth
                                     value={fieldsData[field.name as keyof T] as string | number}
-                                    onChange={(event) => handleFieldChange(field.name as keyof T, event.target.value)}
+                                    onChange={(event) => handleFieldChange(field as ModalFieldConfig, event.target.value)}
                                     error={!!errors[field.name as string]}
                                     helperText={errors[field.name as string]}
                                 >
@@ -249,7 +247,30 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                                     )) : <MenuItem value="" disabled>
                                         {field.label}
                                     </MenuItem>}
-                                </TextField>
+                                </TextField> */}
+                                <Autocomplete
+                                    options={field.options || [{ value: '', label: field.label }]}
+                                    getOptionLabel={(option) => option.label ?? ''}
+                                    isOptionEqualToValue={(option, value) => option.value === value.value}
+                                    value={
+                                        field.options?.find(opt =>
+                                            opt.value === fieldsData[field.name as keyof T]
+                                        ) || null
+                                    }
+                                    onChange={(_, newValue) => {
+                                        handleFieldChange(field as ModalFieldConfig, newValue?.value ?? '');
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label={field.label}
+                                            name={field.name}
+                                            fullWidth
+                                            error={!!errors[field.name as string]}
+                                            helperText={errors[field.name as string]}
+                                        />
+                                    )}
+                                />
                             </Grid2>
                         );
                     case "date":
@@ -265,7 +286,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                                         sx={{ width: "100%" }}
                                         label={field.label}
                                         value={dayjs(fieldsData[field.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.name as keyof T] as string) : null}
-                                        onChange={(newValue) => handleFieldChange(field.name as keyof T, dayjs(newValue).format('YYYY-MM-DD'))}
+                                        onChange={(newValue) => handleFieldChange(field as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
                                         format='YYYY-MM-DD'
                                         slotProps={{
                                             field: { clearable: true },
@@ -347,6 +368,12 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                             </Fragment >);
                         }
                         break;
+                    case "divider":
+                        return (
+                            <Grid2 size={{ xs: 12, sm: 12 }} key={field.name}>
+                                <Divider>{field.label}</Divider>
+                            </Grid2>
+                        );
                     default:
                         if (customField[field.name as string]) {
                             return customField[field.name as string](field, errors);

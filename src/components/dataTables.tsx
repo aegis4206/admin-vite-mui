@@ -13,6 +13,7 @@ interface TableRow {
 interface DataTableProps<T extends TableRow> {
     columns: GridColDef[];
     rows: T[];
+    setRows: Dispatch<SetStateAction<T[]>>
     checkbox?: boolean;
     multiSelect?: boolean;
     gridApiRef?: RefObject<GridApiCommunity | null> | null;
@@ -239,6 +240,15 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 // 處理欄位寬度變化
                 onColumnWidthChange={onColumnWidthChange}
 
+                // 處理行編輯 改單擊
+                onCellClick={(params) => {
+                    if (params.colDef.editable) {
+                        tableRef.current.startCellEditMode({
+                            id: params.id,
+                            field: params.field,
+                        });
+                    }
+                }}
             />
         </div >
     );

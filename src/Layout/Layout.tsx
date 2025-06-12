@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -17,16 +17,14 @@ import { RiTranslate } from "react-icons/ri";
 import Footer from './Footer'
 import SideBarMenu from './SideBarMenu';
 import Breadcrumbs from './Breadcrumbs';
-import { Link } from 'react-router-dom';
-import { Backdrop, CircularProgress, Grid2 } from '@mui/material';
-import Snackbars from '../components/snackbar';
-import { loadingAtom } from '../states/global';
-import { drawerShowAtom } from '../states/global';
+import { Link, useNavigate } from 'react-router-dom';
+import { Avatar, Grid2, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import { drawerShowAtom, loginInfoAtom } from '../states/global';
 import { useAtom } from "jotai";
 // import logo from '../assets/logo.png';
 import logo_white from '../assets/logo_white.svg';
 import { useTranslation } from 'react-i18next';
-import ModalMessage from '../components/modalMessage';
+import { LuLogOut } from 'react-icons/lu';
 
 const drawerWidth: number = 240;
 
@@ -120,9 +118,14 @@ export default function Dashboard(
   }
 ) {
 
-  const [loading,] = useAtom(loadingAtom);
   const [open, setOpen] = useAtom(drawerShowAtom);
   const { i18n } = useTranslation();
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openE1 = Boolean(anchorEl);
+  const [loginInfo,] = useAtom(loginInfoAtom);
+  const navigate = useNavigate();
+
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'zh' ? 'en' : 'zh');
@@ -156,6 +159,19 @@ export default function Dashboard(
   const toggleDrawer = () => {
     setOpen(!open);
   };
+
+  // anchorEl
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleLogout = () => {
+    localStorage.removeItem('loginInfo');
+    setAnchorEl(null);
+    navigate('/login');
+  }
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -193,9 +209,66 @@ export default function Dashboard(
             <IconButton onClick={toggleLanguage} color="inherit">
               <RiTranslate />
             </IconButton>
-            <IconButton color="inherit">
+            <IconButton
+              color="inherit"
+              onClick={handleClick}
+              aria-controls={openE1 ? 'account-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={openE1 ? 'true' : undefined}
+            >
               <FaUserCircle />
             </IconButton>
+            {loginInfo && <Menu
+              anchorEl={anchorEl}
+              id="account-menu"
+              open={openE1}
+              onClose={handleClose}
+              slotProps={{
+                paper: {
+                  elevation: 0,
+                  sx: {
+                    minWidth: 200,
+                    overflow: 'visible',
+                    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                    mt: 1.5,
+                    '& .MuiAvatar-root': {
+                      width: 32,
+                      height: 32,
+                      ml: -0.5,
+                      mr: 1,
+                    },
+                    '&::before': {
+                      content: '""',
+                      display: 'block',
+                      position: 'absolute',
+                      top: 0,
+                      right: 14,
+                      width: 10,
+                      height: 10,
+                      bgcolor: 'background.paper',
+                      transform: 'translateY(-50%) rotate(45deg)',
+                      zIndex: 0,
+                    },
+                  },
+                },
+              }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            >
+              <MenuItem>
+                <Avatar /> {loginInfo.user.username} {loginInfo.user.name}
+              </MenuItem>
+              <MenuItem>
+                使用者身份 : {loginInfo.user.type === 0 ? '員工' : '代送商'}
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LuLogOut fontSize="small" />
+                </ListItemIcon>
+                Logout
+              </MenuItem>
+            </Menu>}
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" sx={{}} open={open}>
@@ -258,17 +331,6 @@ export default function Dashboard(
           <Footer />
         </Container>
       </Box>
-      <Snackbars />
-      <ModalMessage />
-      <Backdrop
-        sx={{
-          color: '#fff',
-          zIndex: 9999,
-        }}
-        open={loading}
-      >
-        <CircularProgress color="primary" />
-      </Backdrop>
     </Box>
   );
 }
