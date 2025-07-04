@@ -11,8 +11,8 @@ import IconButton from '@mui/material/IconButton';
 import Container from '@mui/material/Container';
 import { IoMdMenu } from "react-icons/io";
 import { FaChevronLeft, FaUserCircle } from "react-icons/fa";
-import { RiTranslate } from "react-icons/ri";
-// import { FaGithub } from "react-icons/fa";
+import { BsTranslate } from "react-icons/bs";
+
 
 import Footer from './Footer'
 import SideBarMenu from './SideBarMenu';
@@ -207,7 +207,7 @@ export default function Dashboard(
               <FaGithub />
             </IconButton> */}
             <IconButton onClick={toggleLanguage} color="inherit">
-              <RiTranslate />
+              <BsTranslate color={i18n.language === 'zh' ? 'black' : 'white'} />
             </IconButton>
             <IconButton
               color="inherit"
@@ -259,7 +259,7 @@ export default function Dashboard(
                 <Avatar /> {loginInfo.user.username} {loginInfo.user.name}
               </MenuItem>
               <MenuItem>
-                使用者身份 : {loginInfo.user.type === 0 ? '員工' : '代送商'}
+                使用者身份 : {loginInfo.user.type}
               </MenuItem>
               <Divider />
               <MenuItem onClick={handleLogout}>

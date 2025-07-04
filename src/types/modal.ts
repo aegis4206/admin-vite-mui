@@ -11,14 +11,20 @@ export interface ModalFieldConfig {
     | "password"
     | "custom"
     | "address"
+    | "selectWithRangeDate"
     | "divider";
   options?: { value: string | number; label: string }[];
   disabled?: boolean;
   validation?: ("isEmpty" | "isPositiveInteger")[];
   param?: boolean;
   smGrid?: number;
+
+  targetSelectValue?: string;
+  startDate?: ModalFieldConfig;
+  endDate?: ModalFieldConfig;
   // [key: string]: unknown;
 }
+
 
 export interface ModalMessageProps<T> {
   open: boolean;

@@ -1,7 +1,7 @@
 // import * as React from 'react';
-import { loadingAtom } from '../states/global';
+import { fetchCountAtom, loadingAtom } from '../states/global';
 import { useAtom } from "jotai";
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { snackBarAtom } from '../states/global';
 import { ApiResponse, FetchActionsType } from '../types/fetch';
 
@@ -9,14 +9,16 @@ import { ApiResponse, FetchActionsType } from '../types/fetch';
 function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
     const [, setLoading] = useAtom(loadingAtom);
     const [, setSnackBar] = useAtom(snackBarAtom);
+    const [, setFetchCount] = useAtom(fetchCountAtom);
 
 
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const fetchHandle = async (method: string, param?: Record<string, string>, body?: T, SpecificUrl?: string): Promise<ApiResponse<T>> => {
         const controller = new AbortController();
 
         try {
             setLoading(true)
+            setFetchCount(prev => prev + 1);
             const isFormData = body instanceof FormData;
 
             setTimeout(() => {
@@ -68,7 +70,6 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${paramUrl}`, payload);
 
             const data: ApiResponse<T> = await res.json();
-
             if (res.status === 200) {
                 if (!data.success) {
                     setSnackBar({ open: true, message: data.message || 'Request failed', severity: 'error' });
@@ -90,10 +91,10 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                 return data;
             }
             else if (res.status === 401) {
-                setSnackBar({ open: true, message: 'Unauthorized', severity: 'error' });
-                // navigate('/login');
+                setSnackBar({ open: true, message: data.message || 'Unauthorized', severity: 'error' });
+                navigate('/login');
                 return { success: false, message: 'Unauthorized' };
-            } 
+            }
             // else if (res.status === 422) {
             //     setSnackBar({ open: true, message: data.message || 'failedValidation', severity: 'error' });
             //     // navigate('/login');
@@ -108,8 +109,13 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             return { success: false, message: (error as Error).message || 'Network error' };
         } finally {
             setTimeout(() => {
-                setLoading(false);
-
+                setFetchCount(prev => {
+                    if (prev <= 1) {
+                        setLoading(false);
+                        return 0;
+                    }
+                    return prev - 1
+                });
             }, 500);
         }
     }

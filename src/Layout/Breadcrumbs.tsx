@@ -4,10 +4,12 @@ import { sideBarMenuData } from "../states/route";
 import { MenuItem } from "../types/menu";
 import { useAtom } from "jotai";
 import { useState, useEffect } from "react";
+import { currentRouteAtom } from "../states/global";
 
 const Breadcrumbs = () => {
     const [pathList, setPathList] = useState<MenuItem[]>([]);
     const [list,] = useAtom<MenuItem[]>(sideBarMenuData)
+    const [, setCurrentRoute] = useAtom<MenuItem | undefined>(currentRouteAtom);
     const location = useLocation();
     const pathnames = location.pathname.split("/").filter(x => x);
 
@@ -55,7 +57,6 @@ const Breadcrumbs = () => {
     //     // 如果沒有找到匹配的路徑，返回空陣列
     //     return [];
     // };
-
 
     const findParentPath = (
         menuItemArr: MenuItem[],
@@ -115,19 +116,22 @@ const Breadcrumbs = () => {
         return [];
     };
 
+    const newPathListHandle = () => {
+        // 確保pathnames路徑長度大於0
+        if (!!pathnames && pathnames.length > 0) return findParentPath(list, pathnames.join("/"));
+        return []
+    };
+
     useEffect(() => {
-        const newPathList = () => {
-            // 確保pathnames路徑長度大於0
-            if (!!pathnames && pathnames.length > 0) return findParentPath(list, pathnames.join("/"));
-            return []
-        };
-        setPathList(newPathList);
+        if (list && list.length > 0) {
+            const newPathList = newPathListHandle();
+            setPathList(newPathList);
+            setCurrentRoute(newPathList.length > 0 ? newPathList[newPathList.length - 1] : undefined);
+        }
         return () => {
 
         }
-    }, [location.pathname])
-
-
+    }, [location.pathname, list])
 
 
     return (

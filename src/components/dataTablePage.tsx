@@ -11,6 +11,7 @@ import { CiSearch, CiEraser } from "react-icons/ci";
 import { useSearchParams } from 'react-router-dom';
 import { GridApiCommunity } from '@mui/x-data-grid/internals';
 
+
 interface DataTablePageProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
@@ -23,10 +24,10 @@ interface DataTablePageProps<T> {
     onDelete?: (row: T) => void;
     // 追加extendColumns在表最前
     extendColumns?: GridColDef[];
-    ref?: RefObject<{ getData: () => void } | null>;
+    ref?: RefObject<{ getData: (param?: Record<string, string>) => void, data?: T[] } | null>;
     paramFields?: ModalFieldConfig[];
     // extendActions 非selectMode、viewOnly時 追加操作
-    extendActions?: (params: GridRenderCellParams) => React.ReactNode; 
+    extendActions?: (params: GridRenderCellParams) => React.ReactNode;
     viewOnly?: boolean;
     extendButtons?: React.ReactNode;
     getParams?: Record<string, string>;
@@ -181,7 +182,7 @@ function DataTablePage<T extends TableRow>({
 
 
     useImperativeHandle(ref, () => ({
-        getData,
+        getData, data: rows
     }));
 
     useEffect(() => {
@@ -230,7 +231,7 @@ function DataTablePage<T extends TableRow>({
                 ),
             }
         ]
-       
+
         return [
             ...extendColumns,
             ...defaultActions,
@@ -263,7 +264,7 @@ function DataTablePage<T extends TableRow>({
                     : baseCol;
             }),
         ]
-    }, []);
+    }, [customRenderers]);
 
     const onSearch = () => {
         if (paginationMode) {

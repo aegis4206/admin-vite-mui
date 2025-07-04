@@ -1,15 +1,12 @@
 import { Autocomplete, Divider, Grid2, IconButton, InputAdornment, MenuItem, TextField } from '@mui/material'
 import { Fragment, ReactNode, RefObject, useEffect, useImperativeHandle, useMemo, useState } from 'react'
 import { ModalFieldConfig } from '../types/modal';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/zh-tw';
 import { isPositiveInteger } from '../utils/validate';
 import { CityList } from '../utils/cityList';
+import CustomDatePicker from './customDatePicker';
 
 interface FieldToolProps<T> {
     fields: ModalFieldConfig[];
@@ -46,9 +43,19 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     [field.name]: value,
                 })
             }
+            // selectWithRangeDate變化時初始化日期
+            if (field.type === "selectWithRangeDate" && field.targetSelectValue !== undefined) {
+                return ({
+                    ...tempFields,
+                    [field.startDate?.name as string]: "",
+                    [field.endDate?.name as string]: "",
+                    [field.name]: value,
+                })
+            }
             return ({
                 ...tempFields,
-                [field.name]: value === "Invalid Date" ? (field.type === "date" ? "" : value) : value,
+                // 追加selectWithRangeDate處理
+                [field.name]: value === "Invalid Date" ? ((field.type === "date" || field.type === "selectWithRangeDate") ? "" : value) : value,
             })
         });
     };
@@ -92,20 +99,6 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
     const handleMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
     };
-
-    const { t, i18n } = useTranslation();
-    const localeText = useMemo(() => ({
-        dateFormat: t("datePicker.dateFormat"),
-        previousMonth: t("datePicker.previousMonth"),
-        nextMonth: t("datePicker.nextMonth"),
-        cancelButtonLabel: t("datePicker.cancelButtonLabel"),
-        clearButtonLabel: t("datePicker.clearButtonLabel"),
-        okButtonLabel: t("datePicker.okButtonLabel"),
-        todayButtonLabel: t("datePicker.todayButtonLabel"),
-        fieldYearPlaceholder: () => t("datePicker.fieldYearPlaceholder"),
-        fieldMonthPlaceholder: () => t("datePicker.fieldMonthPlaceholder"),
-        fieldDayPlaceholder: () => t("datePicker.fieldDayPlaceholder"),
-    }), [t, i18n.language]);
 
     const validation = (): boolean => {
         if (!fieldsData) {
@@ -276,31 +269,24 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     case "date":
                         return (
                             <Grid2 size={{ xs: 12, sm: 4 }} key={field.name}>
-                                <LocalizationProvider
-                                    localeText={localeText}
-                                    adapterLocale={i18n.language === 'zh' ? 'zh-tw' : 'en'}
-                                    key={field.name}
-                                    dateAdapter={AdapterDayjs}
-                                >
-                                    <DatePicker
-                                        sx={{ width: "100%" }}
-                                        label={field.label}
-                                        value={dayjs(fieldsData[field.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.name as keyof T] as string) : null}
-                                        onChange={(newValue) => handleFieldChange(field as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
-                                        format='YYYY-MM-DD'
-                                        slotProps={{
-                                            field: { clearable: true },
-                                            actionBar: { actions: ["clear", "today", "cancel", "accept"] },
-                                            textField: {
-                                                error: !!errors[field.name as string],
-                                                helperText: errors[field.name as string],
-                                            },
-                                            popper: {
-                                                placement: 'auto',
-                                            },
-                                        }}
-                                    />
-                                </LocalizationProvider>
+                                <CustomDatePicker
+                                    sx={{ width: "100%" }}
+                                    label={field.label}
+                                    value={dayjs(fieldsData[field.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.name as keyof T] as string) : null}
+                                    onChange={(newValue) => handleFieldChange(field as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
+                                    format='YYYY-MM-DD'
+                                    slotProps={{
+                                        field: { clearable: true },
+                                        actionBar: { actions: ["clear", "today", "cancel", "accept"] },
+                                        textField: {
+                                            error: !!errors[field.name as string],
+                                            helperText: errors[field.name as string],
+                                        },
+                                        popper: {
+                                            placement: 'auto',
+                                        },
+                                    }}
+                                />
                             </Grid2>
                         );
                     case "address":
@@ -374,6 +360,81 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                                 <Divider>{field.label}</Divider>
                             </Grid2>
                         );
+                    case "selectWithRangeDate":
+                        if (field.targetSelectValue !== undefined && field.startDate && field.endDate) {
+                            return (
+                                <Fragment key={field.name}>
+                                    <Grid2 size={{ xs: 12, sm: 4 }}>
+                                        <Autocomplete
+                                            options={field.options || [{ value: '', label: field.label }]}
+                                            getOptionLabel={(option) => option.label ?? ''}
+                                            isOptionEqualToValue={(option, value) => option.value === value.value}
+                                            value={
+                                                field.options?.find(opt =>
+                                                    opt.value === fieldsData[field.name as keyof T]
+                                                ) || null
+                                            }
+                                            onChange={(_, newValue) => {
+                                                handleFieldChange(field as ModalFieldConfig, newValue?.value ?? '');
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    label={field.label}
+                                                    name={field.name}
+                                                    fullWidth
+                                                    error={!!errors[field.name as string]}
+                                                    helperText={errors[field.name as string]}
+                                                />
+                                            )}
+                                        />
+                                    </Grid2>
+                                    {fieldsData[field.name as keyof T] === field.targetSelectValue && <>
+                                        <Grid2 size={{ xs: 12, sm: 4 }}>
+                                            <CustomDatePicker
+                                                sx={{ width: "100%" }}
+                                                label={field.startDate?.label}
+                                                value={dayjs(fieldsData[field.startDate?.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.startDate?.name as keyof T] as string) : null}
+                                                onChange={(newValue) => handleFieldChange(field.startDate as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
+                                                format='YYYY-MM-DD'
+                                                slotProps={{
+                                                    field: { clearable: true },
+                                                    actionBar: { actions: ["clear", "today", "cancel", "accept"] },
+                                                    textField: {
+                                                        error: !!errors[field.startDate?.name as string],
+                                                        helperText: errors[field.startDate?.name as string],
+                                                    },
+                                                    popper: {
+                                                        placement: 'auto',
+                                                    },
+                                                }}
+                                            />
+                                        </Grid2>
+                                        <Grid2 size={{ xs: 12, sm: 4 }}>
+                                            <CustomDatePicker
+                                                sx={{ width: "100%" }}
+                                                label={field.endDate?.label}
+                                                value={dayjs(fieldsData[field.endDate?.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.endDate?.name as keyof T] as string) : null}
+                                                onChange={(newValue) => handleFieldChange(field.endDate as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
+                                                format='YYYY-MM-DD'
+                                                slotProps={{
+                                                    field: { clearable: true },
+                                                    actionBar: { actions: ["clear", "today", "cancel", "accept"] },
+                                                    textField: {
+                                                        error: !!errors[field.endDate?.name as string],
+                                                        helperText: errors[field.endDate?.name as string],
+                                                    },
+                                                    popper: {
+                                                        placement: 'auto',
+                                                    },
+                                                }}
+                                            />
+                                        </Grid2>
+                                    </>}
+                                </Fragment>
+                            )
+                        }
+                        break;
                     default:
                         if (customField[field.name as string]) {
                             return customField[field.name as string](field, errors);

@@ -7,7 +7,7 @@ export interface AuthUserType {
   username: string;
   password: string;
   name: string;
-  type: 0 | 1;
+  type: "0" | "1";
   nickname: string;
   avatar: string;
   email: string;

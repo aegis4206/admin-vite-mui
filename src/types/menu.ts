@@ -1,23 +1,17 @@
-import { ReactNode } from "react";
-
-export interface BaseMenuItem {
+import { ReactNode, JSX, LazyExoticComponent } from "react";
+export interface MenuItem {
   name: string;
   path: string;
-  icon?: ReactNode;
-  pageNode?: ReactNode;
+  icon?: ReactNode | undefined;
+  pageNode?: LazyExoticComponent<() => JSX.Element> | undefined;
+  children?: MenuItem[];
+  noSideBarRoute?: MenuItem[];
 }
-
-export interface WithChildren extends BaseMenuItem {
-  children: MenuItem[];
+export interface BackEndMenuItem {
+  name: string;
+  path: string;
+  icon?: string;
+  pageNode?: string;
+  children?: BackEndMenuItem[];
+  noSideBarRoute?: BackEndMenuItem[];
 }
-
-export interface WithNoSideBarRoute extends BaseMenuItem {
-  noSideBarRoute: MenuItem[];
-}
-
-interface WithoutExtras extends BaseMenuItem {
-  children?: never;
-  noSideBarRoute?: never;
-}
-
-export type MenuItem = WithoutExtras | WithChildren | WithNoSideBarRoute;
