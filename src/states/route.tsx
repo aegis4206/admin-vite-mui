@@ -15,6 +15,7 @@ export const iconMap = {
 
 
 export const componentMap = {
+    TestPage: lazy(() => import('../Pages/TestPage')),
     Auth_user: lazy(() => import('../Pages/System/Auth/Auth_user')),
 };
 
@@ -49,6 +50,12 @@ export const backendRoutesData = atom<BackEndMenuItem[]>([
                 ]
             },
         ],
-    }
+    },
+    {
+        name: "測試頁面",
+        path: "test_page",
+        icon: "RiAdminLine",
+        pageNode: "TestPage",
+    },
 ]);
 export const sideBarMenuData = atom<MenuItem[]>([]);

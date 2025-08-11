@@ -1,7 +1,7 @@
 // components/DataTablePage.tsx
-import { useState, useMemo, useImperativeHandle, RefObject, useEffect } from 'react';
-import { GridColDef, GridPaginationModel, GridRenderCellParams } from '@mui/x-data-grid';
-import { Box, Button, Collapse, Grid2 } from '@mui/material';
+import { useState, useMemo, useImperativeHandle, RefObject, useEffect, useRef } from 'react';
+import { GridColDef, GridPaginationModel, GridRenderCellParams, GridRowId } from '@mui/x-data-grid';
+import { Box, Button, Collapse, Grid2, IconButton } from '@mui/material';
 import DataTable from './dataTables';
 import { FetchActionsType, TableRow } from '../types/fetch';
 import FieldTool from './fieldTool';
@@ -10,6 +10,7 @@ import { IoMdAdd, IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
 import { CiSearch, CiEraser } from "react-icons/ci";
 import { useSearchParams } from 'react-router-dom';
 import { GridApiCommunity } from '@mui/x-data-grid/internals';
+import { FaArrowDown, FaArrowUp } from 'react-icons/fa';
 
 
 interface DataTablePageProps<T> {
@@ -24,7 +25,7 @@ interface DataTablePageProps<T> {
     onDelete?: (row: T) => void;
     // 追加extendColumns在表最前
     extendColumns?: GridColDef[];
-    ref?: RefObject<{ getData: (param?: Record<string, string>) => void, data?: T[] } | null>;
+    ref?: RefObject<{ getData: (param?: Record<string, string>) => void, data?: T[], setData?: React.Dispatch<React.SetStateAction<T[]>> } | null>;
     paramFields?: ModalFieldConfig[];
     // extendActions 非selectMode、viewOnly時 追加操作
     extendActions?: (params: GridRenderCellParams) => React.ReactNode;
@@ -35,6 +36,9 @@ interface DataTablePageProps<T> {
     paginationMode?: boolean;
     multiSelect?: boolean;
     gridApiRef?: RefObject<GridApiCommunity | null> | null;
+    initGetData?: boolean;
+    detailKey?: string;
+    detailFields?: Record<string, string>;
 }
 
 function DataTablePage<T extends TableRow>({
@@ -55,7 +59,11 @@ function DataTablePage<T extends TableRow>({
     paginationMode = false,
     multiSelect = false,
     gridApiRef = null,
+    initGetData = true,
+    detailKey,
+    detailFields,
 }: DataTablePageProps<T>) {
+    const init = useRef<boolean>(initGetData);
     const [rows, setRows] = useState<T[]>([]);
     const [paramsData, setParamsData] = useState<Record<string, string>>({});
     const [advance, setAdvance] = useState(false);
@@ -182,7 +190,8 @@ function DataTablePage<T extends TableRow>({
 
 
     useImperativeHandle(ref, () => ({
-        getData, data: rows
+        getData, data: rows,
+        setData: setRows
     }));
 
     useEffect(() => {
@@ -191,8 +200,42 @@ function DataTablePage<T extends TableRow>({
     }, []);
 
     useEffect(() => {
-        getData();
+        if (init.current) {
+            getData();
+        }
+        init.current = true;
     }, [paginationModel]);
+
+    const customRenderersHandle: (columns: Record<string, string>) => GridColDef[] = (columns) => {
+        return Object.keys(columns).map<GridColDef>((key) => {
+            let width = String(columns[key]).length * 25;
+            // 設定特定欄位 寬度
+            switch (key) {
+                case "address":
+                    width = 150;
+                    break;
+                case "county":
+                case "district":
+                    width = 70;
+                    break;
+                case "name":
+                    width = 100;
+                    break;
+                case "filePath":
+                    width = 150;
+                    break;
+            }
+            const baseCol: GridColDef = {
+                field: key,
+                headerName: dataType[key],
+                // 判斷columnWidth是否存在 載入記錄寬度
+                width: columnWidth[key] ? Number(columnWidth[key]) : width,
+            };
+            return customRenderers[key]
+                ? { ...baseCol, ...customRenderers[key] }
+                : baseCol;
+        })
+    }
 
     const columns: GridColDef[] = useMemo(() => {
         const defaultActions: GridColDef[] = viewOnly || selectMode ? [] : [
@@ -235,34 +278,7 @@ function DataTablePage<T extends TableRow>({
         return [
             ...extendColumns,
             ...defaultActions,
-            ...Object.keys(dataType).map<GridColDef>((key) => {
-                let width = String(dataType[key]).length * 25;
-                // 設定特定欄位 寬度
-                switch (key) {
-                    case "address":
-                        width = 150;
-                        break;
-                    case "county":
-                    case "district":
-                        width = 70;
-                        break;
-                    case "name":
-                        width = 100;
-                        break;
-                    case "filePath":
-                        width = 150;
-                        break;
-                }
-                const baseCol: GridColDef = {
-                    field: key,
-                    headerName: dataType[key],
-                    // 判斷columnWidth是否存在 載入記錄寬度
-                    width: columnWidth[key] ? Number(columnWidth[key]) : width,
-                };
-                return customRenderers[key]
-                    ? { ...baseCol, ...customRenderers[key] }
-                    : baseCol;
-            }),
+            ...customRenderersHandle(dataType),
         ]
     }, [customRenderers]);
 
@@ -290,6 +306,80 @@ function DataTablePage<T extends TableRow>({
         }
     }
 
+    // detail處理
+    const isDetailTable = !!(detailKey && detailFields && Object.keys(detailFields).length > 0);
+    const [expandedRowIds, setExpandedRowIds] = useState<GridRowId[]>([]);
+    const toggleExpand = (id: GridRowId) => {
+        setExpandedRowIds((prev) =>
+            prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+        );
+    };
+
+    const rowsDetailHandle = useMemo(() => {
+        if (!isDetailTable) return rows;
+        const newRows: T[] = [];
+        rows.forEach((row) => {
+            newRows.push(row);
+            if (expandedRowIds.includes(row.id!) && detailKey) {
+                newRows.push({
+                    expand: row[(detailKey as keyof T)],
+                    id: `${row.id}-detail`,
+                    isDetail: true,
+                } as unknown as T);
+            }
+        });
+        return newRows;
+    }, [expandedRowIds, rows]);
+
+
+    const columnsDetailHandle: GridColDef[] = useMemo(() => {
+        if (!isDetailTable) return columns;
+        const expand: GridColDef = {
+            field: "expand",
+            headerName: "",
+            width: 50,
+            sortable: false,
+            filterable: false,
+            renderCell: (params) => {
+                // if (params.row.isDetail) return null;
+                const isExpanded = expandedRowIds.includes(params.id);
+                if (params.row.isDetail) {
+                    return <Box sx={{
+                        width: '60vw',
+                        padding: "0px 0px 10px 20px",
+                    }}>
+                        <DataTable
+                            rows={params.row.expand}
+                            columns={customRenderersHandle(detailFields)}
+                        />
+                    </Box>;
+                }
+                return (
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(params.id);
+                        }}
+                    >
+                        {isExpanded ? <FaArrowDown /> : <FaArrowUp />}
+                    </IconButton>
+                );
+            },
+        }
+        return [
+            expand,
+            ...columns.map((col) => ({
+                ...col,
+                cellClassName: detailKey ? '' : col.cellClassName || '',
+                renderCell: (params) => {
+                    if (params.row.isDetail) return null;
+                    return typeof col.renderCell === 'function' ? col.renderCell(params) : params.value;
+                },
+            } as GridColDef))
+        ]
+    }, [expandedRowIds, rowsDetailHandle]);
+
     return (
         <>
             <Grid2 size={{ xs: 12, sm: 12 }}>
@@ -306,7 +396,7 @@ function DataTablePage<T extends TableRow>({
                                 color='info'
                                 onClick={onAdd}
                                 component="div"
-                                hidden={viewOnly || selectMode}
+                                hidden={!onAdd}
                             >新增</Button>
                             {extendButtons}
                         </Grid2>
@@ -365,8 +455,8 @@ function DataTablePage<T extends TableRow>({
                 </Collapse>
             </Grid2>
             <DataTable<T>
-                columns={columns}
-                rows={rows}
+                columns={columnsDetailHandle}
+                rows={rowsDetailHandle}
                 setRows={setRows}
                 paginationMode={paginationMode}
                 paginationRowCount={paginationRowCount}
@@ -374,8 +464,9 @@ function DataTablePage<T extends TableRow>({
                 setPaginationModel={setPaginationModel}
                 checkbox={selectMode}
                 multiSelect={multiSelect}
-                gridApiRef={gridApiRef} />
-
+                gridApiRef={gridApiRef}
+                isDetailTable={isDetailTable}
+            />
         </>
     );
 }

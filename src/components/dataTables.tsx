@@ -1,8 +1,10 @@
-import { DataGrid, GridColDef, GridColumnResizeParams, GridPaginationModel, GridRowSelectionModel, useGridApiRef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridColumnResizeParams, GridPaginationModel, GridRowClassNameParams, GridRowSelectionModel, useGridApiRef } from '@mui/x-data-grid';
 import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GridApiCommunity } from '@mui/x-data-grid/internals';
 import CustomPagination from './customPagination';
+import { useLocation } from 'react-router-dom';
+import { Box } from '@mui/material';
 
 interface TableRow {
     id?: string | number;
@@ -13,7 +15,7 @@ interface TableRow {
 interface DataTableProps<T extends TableRow> {
     columns: GridColDef[];
     rows: T[];
-    setRows: Dispatch<SetStateAction<T[]>>
+    setRows?: Dispatch<SetStateAction<T[]>>
     checkbox?: boolean;
     multiSelect?: boolean;
     gridApiRef?: RefObject<GridApiCommunity | null> | null;
@@ -21,9 +23,10 @@ interface DataTableProps<T extends TableRow> {
     paginationRowCount?: number;
     paginationModel?: GridPaginationModel;
     setPaginationModel?: Dispatch<SetStateAction<GridPaginationModel>>
+    isDetailTable?: boolean;
 }
 
-export default function DataTable<T extends TableRow>({ columns, rows, checkbox = false, multiSelect = false, gridApiRef = null, paginationMode = false, paginationRowCount = 0, paginationModel, setPaginationModel }: DataTableProps<T>) {
+export default function DataTable<T extends TableRow>({ columns, rows, checkbox = false, multiSelect = false, gridApiRef = null, paginationMode = false, paginationRowCount = 0, paginationModel, setPaginationModel, isDetailTable }: DataTableProps<T>) {
     const [checkboxSelected, setCheckboxSelected] = useState<GridRowSelectionModel>([]);
     // const [, setGridApiRef] = useAtom(gridApiRefAtom)
     const { t, i18n } = useTranslation();
@@ -148,8 +151,45 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
         }
     }
 
+    const location = useLocation();
+    const onColumnVisibilityModelChange = (newModel: { [key: string]: boolean }) => {
+        if (Object.keys(newModel).length === 0) return;
+        const columnVisibilityList = localStorage.getItem("columnVisibility");
+        if (columnVisibilityList) {
+            try {
+                const newColumnVisibilityList = JSON.parse(columnVisibilityList);
+                localStorage.setItem("columnVisibility", JSON.stringify({
+                    ...newColumnVisibilityList,
+                    [location.pathname]: newModel
+                }));
+            } catch (error) {
+                console.error("Error parsing columnVisibilityList from localStorage:", error);
+            }
+        } else {
+            localStorage.setItem("columnVisibility", JSON.stringify({ [location.pathname]: newModel }));
+        }
+    }
+
+    useEffect(() => {
+        if (tableRef && tableRef.current) {
+            tableRef.current.setColumnVisibilityModel(
+                JSON.parse(localStorage.getItem("columnVisibility") || "{}")[location.pathname] || {}
+            );
+        }
+    }, [tableRef, location.pathname]);
+
+    // 處理非detail欄位樣式
+    const getRowClassName = (params: GridRowClassNameParams) => {
+        if (params.row.isDetail) return 'expand-detailCell';
+        return '';
+    };
+
+
+
     return (
-        <div style={{ width: '100%' }}>
+        <Box sx={{
+            width: '100%',
+        }}>
             <DataGrid
                 apiRef={tableRef}
                 rows={rows}
@@ -224,6 +264,10 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                     '& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within': {
                         outline: 'none',
                     },
+
+                    '.expand-detailCell .MuiDataGrid-cellCheckbox': {
+                        display: 'none!important',
+                    }
                 }}
                 getRowHeight={() => 'auto'}
 
@@ -249,7 +293,14 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                         });
                     }
                 }}
+
+                // 處理欄位選擇
+                onColumnVisibilityModelChange={onColumnVisibilityModelChange}
+
+                // 處理Detail行
+                getRowClassName={isDetailTable ? getRowClassName : undefined}
+                isRowSelectable={isDetailTable ? (params) => !("isDetail" in params.row && "expand" in params.row) : undefined}
             />
-        </div >
+        </Box >
     );
 }

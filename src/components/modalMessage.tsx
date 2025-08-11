@@ -64,9 +64,9 @@ const ModalMessage = () => {
                     >
                         確定
                     </Button>
-                    <Button variant="contained" color='secondary' onClick={() => handleModalShow(false)}>
+                    {!modalMessage.onlySubmit && <Button variant="contained" color='secondary' onClick={() => handleModalShow(false)}>
                         取消
-                    </Button>
+                    </Button>}
                 </Box>
             </Box>
         </Modal >

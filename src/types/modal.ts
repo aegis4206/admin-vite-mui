@@ -32,4 +32,5 @@ export interface ModalMessageProps<T> {
   onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
   formData?: T;
   children?: ReactNode;
+  onlySubmit?: boolean;
 }

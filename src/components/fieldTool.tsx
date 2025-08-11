@@ -110,7 +110,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                 for (const validation of field.validation) {
                     switch (validation) {
                         case "isEmpty":
-                            if (fieldsData[field.name as keyof T] === "") {
+                            if (fieldsData[field.name as keyof T] === "" || !fieldsData[field.name as keyof T]) {
                                 acc[field.name as string] = "此欄位不可為空";
                                 return acc;
                             }
