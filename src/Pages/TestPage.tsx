@@ -107,7 +107,7 @@ const data = [
             {
                 "id": 1,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -115,7 +115,7 @@ const data = [
             {
                 "id": 2,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -123,7 +123,7 @@ const data = [
             {
                 "id": 3,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -131,7 +131,7 @@ const data = [
             {
                 "id": 4,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -139,7 +139,7 @@ const data = [
             {
                 "id": 5,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -168,7 +168,7 @@ const data = [
             {
                 "id": 1,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -176,7 +176,7 @@ const data = [
             {
                 "id": 2,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -184,7 +184,7 @@ const data = [
             {
                 "id": 3,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -192,7 +192,7 @@ const data = [
             {
                 "id": 4,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -200,7 +200,7 @@ const data = [
             {
                 "id": 5,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -229,7 +229,7 @@ const data = [
             {
                 "id": 1,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -237,7 +237,7 @@ const data = [
             {
                 "id": 2,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -245,7 +245,7 @@ const data = [
             {
                 "id": 3,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -253,7 +253,7 @@ const data = [
             {
                 "id": 4,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
@@ -261,7 +261,7 @@ const data = [
             {
                 "id": 5,
                 "promoProductSkuId": 1,
-                "promoProductSkuName": "員購星巴克優格飲-玫瑰蘋果口味 一組六瓶",
+                "promoProductSkuName": "產品",
                 "quantity": "1",
                 "unitPrice": "360",
                 "totalPrice": "360"
