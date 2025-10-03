@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import Layout from './Layout/Layout';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useAtom } from "jotai";
@@ -10,6 +10,7 @@ import Snackbars from './components/snackbar';
 import ModalMessage from './components/modalMessage';
 import { loadingAtom, loginInfoAtom } from './states/global';
 import { LoginInfoType } from './types/System/Auth/auth';
+import { filterMenuByPermissions, flattenTree } from './utils/permissions';
 
 
 export default function App() {
@@ -17,8 +18,9 @@ export default function App() {
   const [backendRoutes,] = useAtom<BackEndMenuItem[]>(backendRoutesData);
   const [routesList, setRoutesList] = useState<MenuItem[]>([])
   const [loading,] = useAtom(loadingAtom);
-  const [, setLoginInfo] = useAtom(loginInfoAtom);
+  const [loginInfo, setLoginInfo] = useAtom(loginInfoAtom);
   const navigate = useNavigate();
+
 
   const listHandle = (sideBarMenuList: MenuItem[]) => {
     const tempList: MenuItem[] = [];
@@ -54,17 +56,27 @@ export default function App() {
     };
   };
 
-  useEffect(() => {
-    // 初始化路由列表
-    const newConvertRoute = backendRoutes.map(convertRoute);
-    setSideBarMenu(newConvertRoute);
-    // 將後端路由轉換為前端路由列表
-    const newRoutesList = listHandle(newConvertRoute);
-    setRoutesList(newRoutesList);
-    return () => {
 
+  const menuPermissionMap = useMemo(() => {
+    if (!loginInfo?.user?.permissions || !(backendRoutes.length > 0)) return null;
+    return flattenTree(backendRoutes).map(item => item.path);
+  }, [loginInfo?.user?.permissions, backendRoutes]);
+
+  // 當登入資訊和後端路由都載入完成後，根據權限過濾選單
+  useEffect(() => {
+    if (menuPermissionMap) {
+      // 根據權限過濾選單
+      const filteredRoutes = filterMenuByPermissions(backendRoutes, loginInfo!.user.permissions!, menuPermissionMap);
+      // 轉換為前端選單格式
+      const newConvertRoute = filteredRoutes.map(convertRoute);
+      setSideBarMenu(newConvertRoute);
+
+      // 將後端路由轉換為前端路由列表
+      const newRoutesList = listHandle(newConvertRoute);
+      setRoutesList(newRoutesList);
     }
-  }, [])
+  }, [menuPermissionMap])
+
 
   useEffect(() => {
     const loginInfo = JSON.parse(localStorage.getItem('loginInfo') || '{}');

@@ -8,9 +8,11 @@ import FieldTool from './fieldTool';
 import { ModalFieldConfig } from '../types/modal';
 import { IoMdAdd, IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
 import { CiSearch, CiEraser } from "react-icons/ci";
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { GridApiCommunity } from '@mui/x-data-grid/internals';
 import { FaArrowDown, FaArrowUp } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { singularize, useCheckPermission } from '../utils/permissions';
 
 
 interface DataTablePageProps<T> {
@@ -23,11 +25,11 @@ interface DataTablePageProps<T> {
     onAdd?: () => void;
     onEdit?: (row: T) => void;
     onDelete?: (row: T) => void;
-    // 追加extendColumns在表最前
+    /** 追加extendColumns在表最前 */
     extendColumns?: GridColDef[];
     ref?: RefObject<{ getData: (param?: Record<string, string>) => void, data?: T[], setData?: React.Dispatch<React.SetStateAction<T[]>> } | null>;
     paramFields?: ModalFieldConfig[];
-    // extendActions 非selectMode、viewOnly時 追加操作
+    /** extendActions 非selectMode、viewOnly時 追加操作 */
     extendActions?: (params: GridRenderCellParams) => React.ReactNode;
     viewOnly?: boolean;
     extendButtons?: React.ReactNode;
@@ -39,6 +41,11 @@ interface DataTablePageProps<T> {
     initGetData?: boolean;
     detailKey?: string;
     detailFields?: Record<string, string>;
+    importFileApi?: () => FetchActionsType<unknown>;
+    exportUrl?: string;
+    exampleUrl?: string;
+    /** 詳細資料 規則 路由/id/路由_detail */
+    detailAction?: boolean;
 }
 
 function DataTablePage<T extends TableRow>({
@@ -62,6 +69,10 @@ function DataTablePage<T extends TableRow>({
     initGetData = true,
     detailKey,
     detailFields,
+    importFileApi,
+    exportUrl,
+    exampleUrl,
+    detailAction = false,
 }: DataTablePageProps<T>) {
     const init = useRef<boolean>(initGetData);
     const [rows, setRows] = useState<T[]>([]);
@@ -72,7 +83,8 @@ function DataTablePage<T extends TableRow>({
         page: 0,
         pageSize: 10,
     });
-    const [paginationRowCount, setPaginationRowCount] = useState(0);
+    const [paginationRowCount, setPaginationRowCount] = useState(1);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const columnWidth: Record<string, string> = useMemo(() => {
         const columnWidthList = localStorage.getItem("columnWidth");
         if (columnWidthList) {
@@ -85,19 +97,13 @@ function DataTablePage<T extends TableRow>({
         }
         return {};
     }, []);
-
-    const paramsDataInit = useMemo(() => {
-        const tempFieldsData = paramFields.reduce((acc, field) => {
-            acc[field.name] = "";
-            return acc;
-        }, {} as Record<string, string>)
-        // 處理處理sortFieldsData
-        const sortFieldsData: Record<string, string> = paginationMode ? {
-            sortBy: "",
-            sortOrder: "",
-        } : {}
-        return { ...tempFieldsData, ...sortFieldsData };
-    }, []);
+    const loginInfo = JSON.parse(localStorage.getItem('loginInfo') || '{}');
+    const location = useLocation();
+    const path = location.pathname;
+    const checkPermission = useCheckPermission();
+    
+    const api = fetchApi();
+    const importApi = importFileApi ? importFileApi() : undefined;
 
     const paramFieldsHandle = useMemo(() => {
         const tempFields = paramFields.filter((field) => field.param).
@@ -127,8 +133,19 @@ function DataTablePage<T extends TableRow>({
         return [...tempFields, ...sortedFields];
     }, []);
 
+    const paramsDataInit = useMemo(() => {
+        const tempFieldsData = paramFieldsHandle.reduce((acc, field) => {
+            acc[field.name] = "";
+            return acc;
+        }, {} as Record<string, string>)
+        // 處理處理sortFieldsData
+        const sortFieldsData: Record<string, string> = paginationMode ? {
+            sortBy: "",
+            sortOrder: "",
+        } : {}
+        return { ...tempFieldsData, ...sortFieldsData };
+    }, [paramFieldsHandle]);
 
-    const api = fetchApi();
 
 
     const searchParamsHandle = useMemo(
@@ -157,13 +174,15 @@ function DataTablePage<T extends TableRow>({
         },
         []
     )
-
+    const paramsFilterTrim = (param: Record<string, string>) => {
+        return Object.fromEntries(
+            Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
+        )
+    };
 
     const getData = async (param: Record<string, string> = paramsData) => {
         // 移除空白參數
-        const filteredParams = Object.fromEntries(
-            Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
-        );
+        const filteredParams = paramsFilterTrim(param);
         if (paginationMode) {
             filteredParams.perPage = paginationModel.pageSize.toString();
             filteredParams.page = (paginationModel.page + 1).toString();
@@ -179,7 +198,7 @@ function DataTablePage<T extends TableRow>({
                 setPaginationRowCount(
                     result.data && 'pagination' in result.data && typeof result.data.pagination === 'object' && 'total' in (result.data.pagination as { total: number })
                         ? (result.data.pagination as { total: number }).total
-                        : 0
+                        : 1
                 );
             } else {
                 setRows((result.data ?? []) as T[]);
@@ -257,6 +276,7 @@ function DataTablePage<T extends TableRow>({
                                 e.stopPropagation();
                                 onEdit?.(params.row);
                             }}
+                            hidden={!onEdit || !checkPermission.canEdit()}
                         >
                             編輯
                         </Button>
@@ -267,6 +287,7 @@ function DataTablePage<T extends TableRow>({
                                 e.stopPropagation();
                                 onDelete?.(params.row);
                             }}
+                            hidden={!onDelete || !checkPermission.canDelete()}
                         >
                             刪除
                         </Button>
@@ -274,6 +295,36 @@ function DataTablePage<T extends TableRow>({
                 ),
             }
         ]
+
+        if (detailAction && checkPermission.canDetail()) {
+            // 詳細資料
+            const detailUrl = singularize(path.split('/').slice(-1)[0]) + '_detail';
+
+            defaultActions.unshift({
+                field: "detail",
+                headerName: "詳細資料",
+                headerAlign: 'center',
+                align: 'center',
+                disableColumnMenu: true,
+                width: 120,
+                renderCell: (params) => {
+                    return (
+                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                            <Button
+                                component={Link as React.ElementType}
+                                to={`${path}/${params.row.id}/${detailUrl}`}
+                                size='small'
+                                color="secondary"
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                            >
+                                詳細
+                            </Button>
+                        </Box>
+                    );
+                },
+
+            })
+        }
 
         return [
             ...extendColumns,
@@ -325,6 +376,7 @@ function DataTablePage<T extends TableRow>({
                     expand: row[(detailKey as keyof T)],
                     id: `${row.id}-detail`,
                     isDetail: true,
+                    parentId: row.id
                 } as unknown as T);
             }
         });
@@ -340,6 +392,7 @@ function DataTablePage<T extends TableRow>({
             width: 50,
             sortable: false,
             filterable: false,
+            disableColumnMenu: true,
             renderCell: (params) => {
                 // if (params.row.isDetail) return null;
                 const isExpanded = expandedRowIds.includes(params.id);
@@ -380,6 +433,53 @@ function DataTablePage<T extends TableRow>({
         ]
     }, [expandedRowIds, rowsDetailHandle]);
 
+    // 上傳處理
+    const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!importApi) return;
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await importApi.post(
+            formData,
+        );
+        if (response.success === true) {
+            setTimeout(() => getData(), 500);
+        }
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // 下載處理
+    const excelDownload = async (url: string) => {
+        const searchParams = paramsFilterTrim(paramsData);
+        const queryString = new URLSearchParams(searchParams).toString();
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${queryString ? `?${queryString}` : ''}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${loginInfo.token || ''}`
+            }
+        });
+        if (!res.ok) return;
+        const disposition = res.headers.get("content-disposition");
+        let filename = "data.xlsx";
+        if (disposition && disposition.includes("filename=")) {
+            filename = disposition
+                .split("filename=")[1]
+                .replace(/["']/g, "");
+        }
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    };
+
     return (
         <>
             <Grid2 size={{ xs: 12, sm: 12 }}>
@@ -396,8 +496,31 @@ function DataTablePage<T extends TableRow>({
                                 color='info'
                                 onClick={onAdd}
                                 component="div"
-                                hidden={!onAdd}
+                                hidden={!onAdd || !checkPermission.canCreate()}
                             >新增</Button>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                hidden={!exampleUrl}
+                                onClick={() => excelDownload(exampleUrl!)}
+                            >下載範例</Button>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                component="label"
+                                hidden={!importFileApi || !checkPermission.canImport()}
+                            >匯入
+                                <input hidden type="file" accept=".xlsx,.xls,.csv"
+                                    ref={fileInputRef}
+                                    onChange={handleUpload} />
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="warning"
+                                hidden={!exportUrl}
+                                onClick={() => excelDownload(exportUrl!)}
+                            >匯出
+                            </Button>
                             {extendButtons}
                         </Grid2>
                     </Box>

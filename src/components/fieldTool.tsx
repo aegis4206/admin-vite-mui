@@ -4,7 +4,7 @@ import { ModalFieldConfig } from '../types/modal';
 import dayjs from 'dayjs';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import 'dayjs/locale/zh-tw';
-import { isPositiveInteger } from '../utils/validate';
+import { isPositiveInteger, isNaturalNumber } from '../utils/validate';
 import { CityList } from '../utils/cityList';
 import CustomDatePicker from './customDatePicker';
 
@@ -118,6 +118,11 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                         case "isPositiveInteger":
                             if (!isPositiveInteger(fieldsData[field.name as keyof T])) {
                                 acc[field.name as string] = "此欄位需為正整數";
+                            }
+                            break;
+                        case "isNaturalNumber":
+                            if (!isNaturalNumber(fieldsData[field.name as keyof T])) {
+                                acc[field.name as string] = "此欄位需為自然數";
                             }
                             break;
                         default:

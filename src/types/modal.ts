@@ -15,7 +15,7 @@ export interface ModalFieldConfig {
     | "divider";
   options?: { value: string | number; label: string }[];
   disabled?: boolean;
-  validation?: ("isEmpty" | "isPositiveInteger")[];
+  validation?: ("isEmpty" | "isPositiveInteger" | "isNaturalNumber")[];
   param?: boolean;
   smGrid?: number;
 
@@ -24,7 +24,6 @@ export interface ModalFieldConfig {
   endDate?: ModalFieldConfig;
   // [key: string]: unknown;
 }
-
 
 export interface ModalMessageProps<T> {
   open: boolean;

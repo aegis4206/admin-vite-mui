@@ -1,11 +1,10 @@
 import { atom } from "jotai";
 import { BackEndMenuItem, MenuItem } from "../types/menu";
 import { FaUserCircle } from 'react-icons/fa';
-import { MdOutlineManageAccounts } from 'react-icons/md';
-
 import { RiAdminLine } from "react-icons/ri";
-
 import { lazy } from "react";
+import { MdOutlineManageAccounts } from "react-icons/md";
+
 
 export const iconMap = {
     RiAdminLine: <RiAdminLine />,
@@ -16,7 +15,9 @@ export const iconMap = {
 
 export const componentMap = {
     TestPage: lazy(() => import('../Pages/TestPage')),
-    Auth_user: lazy(() => import('../Pages/System/Auth/Auth_user')),
+    Users: lazy(() => import('../Pages/System/Auth/Users')),
+    Roles: lazy(() => import('../Pages/System/Auth/Roles')),
+    Permissions: lazy(() => import('../Pages/System/Auth/Permissions')),
 };
 
 // children會在sidebar顯示，noSideBarRoute則不會，且則一存在
@@ -33,19 +34,24 @@ export const backendRoutesData = atom<BackEndMenuItem[]>([
                 children: [
                     {
                         name: "使用者管理",
-                        path: "system/auth/user",
+                        path: "system/auth/users",
                         icon: "RiAdminLine",
-                        pageNode: "Auth_user",
+                        pageNode: "Users",
+                        permission: ['view', 'create', 'edit', 'delete'],
                     },
                     {
                         name: "角色管理",
-                        path: "system/role",
+                        path: "system/auth/roles",
                         icon: "FaUserCircle",
+                        pageNode: "Roles",
+                        permission: ['view', 'create', 'edit', 'delete'],
                     },
                     {
                         name: "權限管理",
-                        path: "system/permission",
+                        path: "system/auth/permissions",
                         icon: "FaUserCircle",
+                        pageNode: "Permissions",
+                        permission: ['view', 'create', 'edit', 'delete'],
                     },
                 ]
             },

@@ -16,6 +16,7 @@ import { MdVisibility } from "react-icons/md";
 import { MdVisibilityOff } from "react-icons/md";
 import { useAuthLogin } from '../utils/fetchUrls';
 import { LoginInfoType } from '../types/System/Auth/auth';
+import logo from '../assets/react.svg';
 
 interface inputType {
     username: boolean,
@@ -132,7 +133,7 @@ export default function Login() {
                     alignItems: 'center',
                 }}
             >
-                <img src="/src/assets/logo.png" alt="" />
+                <img src={logo} alt="Logo" />
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"

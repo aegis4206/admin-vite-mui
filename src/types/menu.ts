@@ -14,4 +14,13 @@ export interface BackEndMenuItem {
   pageNode?: string;
   children?: BackEndMenuItem[];
   noSideBarRoute?: BackEndMenuItem[];
+  permission?: (
+    | "view"
+    | "create"
+    | "edit"
+    | "delete"
+    | "import"
+    | "detail"
+    | "close"
+  )[];
 }

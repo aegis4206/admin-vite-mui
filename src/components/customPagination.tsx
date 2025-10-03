@@ -26,7 +26,11 @@ const CustomTablePagination = () => {
     const page = useGridSelector(apiRef, gridPageSelector);
     const pageCount = useGridSelector(apiRef, gridPageCountSelector);
     const pageSize = useGridSelector(apiRef, gridPageSizeSelector);
-    const rowCount = useGridSelector(apiRef, gridRowCountSelector);
+    const isDetailTableCheck = apiRef.current.getAllRowIds().some(id => id.toString().endsWith("-detail"))
+    const rowCount = useGridSelector(apiRef, gridRowCountSelector)
+    const rowCountHandle = isDetailTableCheck ?
+        apiRef.current.getAllRowIds().filter(id => !id.toString().endsWith("-detail")).length
+        : rowCount;
 
     const { t, i18n } = useTranslation();
 
@@ -42,7 +46,7 @@ const CustomTablePagination = () => {
     };
 
     const from = page * pageSize + 1;
-    const to = Math.min(rowCount, (page + 1) * pageSize);
+    const to = Math.min(rowCountHandle, (page + 1) * pageSize);
 
     const localeText = useMemo(() => ({
 
@@ -86,7 +90,7 @@ const CustomTablePagination = () => {
 
             {/* Range info */}
             <Typography variant="body2">
-                {localeText.labelDisplayedRows({ from, to, count: rowCount })}
+                {localeText.labelDisplayedRows({ from, to, count: rowCountHandle })}
             </Typography>
 
             {/* Pagination */}

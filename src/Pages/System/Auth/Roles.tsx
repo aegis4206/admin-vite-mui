@@ -1,70 +1,50 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import DataTablePage from '../../../components/dataTablePage';
-import { useAuthUser } from '../../../utils/fetchUrls';
-import { Grid2, Typography } from '@mui/material';
-import ModalTool from '../../../components/modalTool';
+import { useAuthRoles } from '../../../utils/fetchUrls';
+import { Card, Grid2, Typography } from '@mui/material';
 import { ModalFieldConfig } from '../../../types/modal';
 import { useAtom } from 'jotai';
 import { modalMessageAtom } from '../../../states/modal';
-import { authUser, AuthUserType } from '../../../types/System/Auth/auth';
-import { GridValueGetter } from '@mui/x-data-grid';
+import { authRole, AuthRoleType } from '../../../types/System/Auth/auth';
+import { BackEndMenuItem } from '../../../types/menu';
+import { backendRoutesData } from '../../../states/route';
+import RolePermissionMenuComponent from './RolePermissionMenuComponent';
+import ModalTool from '../../../components/modalTool';
+import { flattenTree } from '../../../utils/permissions';
+
 
 // 常數設定
-type PAGE_ENTITY_TYPE = AuthUserType; // 資料類型
-const PAGE_TABLE_ENTITY = authUser;         // 資料結構定義
-const PAGE_API_HOOK = useAuthUser;     // API Hook
-const PAGE_TITLE = "使用者管理";         // 頁面標題
+type PAGE_ENTITY_TYPE = AuthRoleType; // 資料類型
+const PAGE_TABLE_ENTITY = authRole;         // 資料結構定義
+const PAGE_API_HOOK = useAuthRoles;     // API Hook
+const PAGE_TITLE = "角色管理";         // 頁面標題
 
 const fields: ModalFieldConfig[] = [
-    { name: "username", label: "使用者名稱", type: "text", validation: ["isEmpty"] },
-    { name: "password", label: "使用者密碼", type: "password" },
-    { name: "name", label: "使用者全名", type: "text", validation: ["isEmpty"] },
-    { name: "type", label: "使用者類型", type: "select", options: [{ value: "0", label: "員工" }, { value: "1", label: "兼職" }] },
-    { name: "nickname", label: "使用者暱稱", type: "text" },
-    { name: "avatar", label: "使用者頭像", type: "text" },
-    { name: "email", label: "使用者信箱", type: "text" },
-    { name: "phone", label: "使用者手機號碼", type: "text" },
+    { name: "name", label: "角色名稱", type: "text", param: true },
 ];
-const initData: AuthUserType = {
+const initData: AuthRoleType = {
     id: "",
-    username: "",
-    password: "",
-    type: "0",
     name: "",
-    nickname: "",
-    avatar: "",
-    email: "",
-    phone: "",
     createdAt: "",
     updatedAt: "",
-    creatorId: 0,
-    modifierId: 0,
+    creatorId: "",
+    modifierId: "",
     creator: "",
     modifier: "",
-}
+    permissions: [],
+};
 
-const Auth_user = () => {
-    const [open, setOpen] = useState<boolean>(false);
+
+const Auth_role = () => {
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [formData, setFormData] = useState(initData);
-    const [modalFields,] = useState(fields);
     const tableRef = useRef<{ getData: () => void }>(null);
     const titleMode = modalMode === "add" ? "新增" : modalMode === "edit" ? "編輯" : "刪除";
     const pageApi = PAGE_API_HOOK<PAGE_ENTITY_TYPE>();
-    const [, setModalMessage] = useAtom(modalMessageAtom)
+    const [, setModalMessage] = useAtom(modalMessageAtom);
+    const [backendRoutes,] = useAtom<BackEndMenuItem[]>(backendRoutesData);
+    const [open, setOpen] = useState<boolean>(false);
 
-    const customRenderers = {
-        type: {
-            field: "type",
-            valueGetter: (value: GridValueGetter) => {
-                switch (Number(value)) {
-                    case 0: return "員工";
-                    case 1: return "代送商";
-                    default: return "";
-                }
-            },
-        },
-    };
 
     const onEdit = (row: PAGE_ENTITY_TYPE) => {
         setModalMode("edit");
@@ -92,9 +72,22 @@ const Auth_user = () => {
         })
     };
 
+    const permissionInitData = useMemo(() => {
+        const pathList = flattenTree(backendRoutes);
+        console.log(pathList)
+        const init = [] as string[];
+        pathList.forEach(item => {
+            if (!item.permission || item.permission.length === 0) return;
+            init.push(item.path); // 自動加入主項目權限
+            init.push(...item.permission.map(perm => `${item.path}.${perm}`));
+        });
+        return init;
+    }, [backendRoutes]);
+
+
     const onAdd = () => {
         setModalMode("add");
-        setFormData({ ...initData });
+        setFormData({ ...initData, permissions: permissionInitData });
         setOpen(true);
     };
 
@@ -111,7 +104,6 @@ const Auth_user = () => {
         }
     };
 
-
     return (
         <>
             <Grid2 size={{ xs: 12, sm: 12 }}>
@@ -127,7 +119,6 @@ const Auth_user = () => {
                 onDelete={onDelete}
                 ref={tableRef}
                 paramFields={fields}
-                customRenderers={customRenderers}
             />
             <ModalTool
                 open={open}
@@ -136,10 +127,18 @@ const Auth_user = () => {
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={onSubmit}
-                fields={modalFields}
-            />
+                fields={fields}
+            >
+                <Grid2 size={12}>
+                    {backendRoutes.map((route: BackEndMenuItem, index: number) => (
+                        <Card variant="outlined" sx={{ mb: 2, bgcolor: "lavender" }} key={index} >
+                            <RolePermissionMenuComponent item={route} level={1} formData={formData} setFormData={setFormData} />
+                        </Card>
+                    ))}
+                </Grid2>
+            </ModalTool>
         </>
     );
 };
 
-export default Auth_user;
+export default Auth_role;
