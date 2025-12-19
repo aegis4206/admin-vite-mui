@@ -59,6 +59,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             if (!isFormData) {
                 headers['Content-Type'] = 'application/json';
             }
+            headers['Accept'] = 'application/json';
 
             const payload = {
                 method: (method === "PUT" && isFormData) ? "POST" : method,

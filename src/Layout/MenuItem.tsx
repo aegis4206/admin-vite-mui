@@ -17,6 +17,7 @@ const MenuItemComponent: React.FC<{
 }> = ({ item, level }) => {
     const [open, setOpen] = useState<boolean>(false);
     const hasChildren = "children" in item && !!item.children && item.children.length > 0;
+    const hasNoSideBarRoute = "noSideBarRoute" in item && !!item.noSideBarRoute && item.noSideBarRoute.length > 0;
     const location = useLocation();
 
     // const includeCheck = (item: MenuItem): boolean =>
@@ -27,8 +28,7 @@ const MenuItemComponent: React.FC<{
     //     return location.pathname === `/${childremItem.path}`
     // }))
     //     ;
-    const isInclude = location.pathname.includes(`${item.path}`);
-
+    const isInclude = (hasChildren || hasNoSideBarRoute) && location.pathname.includes(`${item.path}`);
     const isActive = item.path && location.pathname === `/${item.path}`;
 
     // 根據是否有子項決定是否渲染為 Menu.Item

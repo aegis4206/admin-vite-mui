@@ -187,7 +187,7 @@ export default function Dashboard(
               noWrap
               sx={{ flexGrow: 1 }}
             >
-              <Link to="/">特販B2B2C</Link>
+              <Link to="/">{import.meta.env.VITE_PROJECT_NAME}</Link>
             </Typography>
             {/* <IconButton color="inherit" href='/#' target="_blank">
               <FaGithub />

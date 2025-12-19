@@ -101,9 +101,11 @@ function DataTablePage<T extends TableRow>({
     const location = useLocation();
     const path = location.pathname;
     const checkPermission = useCheckPermission();
-    
+
     const api = fetchApi();
     const importApi = importFileApi ? importFileApi() : undefined;
+    // 確認初始化渲染paramsData已經更新
+    const paramsDataInitCheck = Object.keys(paramsData).length > 0;
 
     const paramFieldsHandle = useMemo(() => {
         const tempFields = paramFields.filter((field) => field.param).
@@ -146,34 +148,47 @@ function DataTablePage<T extends TableRow>({
         return { ...tempFieldsData, ...sortFieldsData };
     }, [paramFieldsHandle]);
 
-
-
     const searchParamsHandle = useMemo(
         () => {
+            const params: Record<string, string> = { ...paramsDataInit };
             if (searchParams.size > 0) {
-                const params: Record<string, string> = { ...paramsDataInit };
                 searchParams.forEach((value, key) => {
                     if (key !== "page" && key !== "size") {
                         params[key] = value;
                     }
                 });
-                setParamsData(params);
-                setAdvance(true);
-                return params;
-            } else if (Object.keys(getParams).length > 0) {
-                const params: Record<string, string> = { ...paramsDataInit };
+            }
+            if (Object.keys(getParams).length > 0) {
                 Object.keys(getParams).forEach((key) => {
                     params[key] = getParams[key];
                 });
-                setParamsData(params);
-                return params;
-            } else {
-                setParamsData(paramsDataInit);
+            }
+            if (searchParams.size == 0 && Object.keys(getParams).length == 0) {
                 return paramsDataInit;
             }
+
+            return params;
         },
         []
     )
+
+    useEffect(() => {
+        setParamsData(searchParamsHandle);
+
+        if (searchParams.size > 0 || Object.keys(getParams).length > 0) {
+            setAdvance(true);
+        }
+
+    }, []);
+
+    useEffect(() => {
+        if (init.current) {
+            getData(paramsDataInitCheck ? undefined : searchParamsHandle);
+        }
+
+        init.current = true;
+    }, [paginationModel]);
+
     const paramsFilterTrim = (param: Record<string, string>) => {
         return Object.fromEntries(
             Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
@@ -213,17 +228,8 @@ function DataTablePage<T extends TableRow>({
         setData: setRows
     }));
 
-    useEffect(() => {
-        const params = searchParamsHandle;
-        setParamsData(params);
-    }, []);
 
-    useEffect(() => {
-        if (init.current) {
-            getData();
-        }
-        init.current = true;
-    }, [paginationModel]);
+
 
     const customRenderersHandle: (columns: Record<string, string>) => GridColDef[] = (columns) => {
         return Object.keys(columns).map<GridColDef>((key) => {
@@ -335,12 +341,13 @@ function DataTablePage<T extends TableRow>({
 
     const onSearch = () => {
         if (paginationMode) {
+
             setPaginationModel({
                 page: 0,
                 pageSize: paginationModel.pageSize,
             });
         } else {
-            getData(paramsData);
+            getData();
         }
     }
 
@@ -569,11 +576,11 @@ function DataTablePage<T extends TableRow>({
                         borderColor="divider"
                         p={1}
                     >
-                        <FieldTool
+                        {paramsDataInitCheck && <FieldTool
                             fieldsData={paramsData}
                             setFieldsData={setParamsData}
                             fields={paramFieldsHandle}
-                        />
+                        />}
                     </Grid2>
                 </Collapse>
             </Grid2>
