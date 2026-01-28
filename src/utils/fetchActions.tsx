@@ -28,11 +28,15 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             switch (method) {
                 case "GET":
                     if (param) {
-                        if (param.id) {
-                            paramUrl = `/${param.id}`;
-                        } else {
+                        if (Object.keys(param).length > 0) {
+                            if (param.id) {
+                                paramUrl = `/${param.id}`;
+                            }
+                            delete param.id;
                             const searchParams = new URLSearchParams(param);
-                            paramUrl = Object.keys(param).length > 0 ? `?${searchParams.toString()}` : "";
+                            paramUrl = Object.keys(param).length > 0 ?
+                                `${paramUrl}?${searchParams.toString()}` : paramUrl
+                                ;
                         }
                     }
                     break;
@@ -59,7 +63,6 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
             if (!isFormData) {
                 headers['Content-Type'] = 'application/json';
             }
-            headers['Accept'] = 'application/json';
 
             const payload = {
                 method: (method === "PUT" && isFormData) ? "POST" : method,
@@ -123,7 +126,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
 
 
     return ({
-        get: (param?: Record<string, string> | string) => fetchHandle("GET", url === "" ? undefined : param as Record<string, string>, undefined, param as string),
+        get: (param?: Record<string, string> | string) => fetchHandle("GET", url === "" ? undefined : param as Record<string, string>, undefined, url === "" ? param as string : undefined),
         post: (body: T, forSpecificUrl?: string) => fetchHandle("POST", undefined, body, forSpecificUrl),
         put: (body: T, forSpecificUrl?: string) => fetchHandle("PUT", undefined, body, forSpecificUrl),
         delete: (body: T, forSpecificUrl?: string) => fetchHandle("DELETE", undefined, body, forSpecificUrl),

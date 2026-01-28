@@ -74,7 +74,7 @@ export interface AuthPermissionType {
   id: string;
   path: string;
   name: string;
-  sort: number;
+  sort: string;
   createdAt: string;
   updatedAt: string;
   creatorId: string;

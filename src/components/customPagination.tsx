@@ -15,19 +15,24 @@ import {
     gridPageCountSelector,
     gridPageSizeSelector,
     gridRowCountSelector,
+    gridFilteredRowCountSelector,
 } from '@mui/x-data-grid';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import { useTranslation } from 'react-i18next';
+import { useGridRootProps } from '@mui/x-data-grid';
 
 
 const CustomTablePagination = () => {
     const apiRef = useGridApiContext();
+    const rootProps = useGridRootProps();
 
     const page = useGridSelector(apiRef, gridPageSelector);
     const pageCount = useGridSelector(apiRef, gridPageCountSelector);
     const pageSize = useGridSelector(apiRef, gridPageSizeSelector);
     const isDetailTableCheck = apiRef.current.getAllRowIds().some(id => id.toString().endsWith("-detail"))
-    const rowCount = useGridSelector(apiRef, gridRowCountSelector)
+    const clientRowCount = useGridSelector(apiRef, gridFilteredRowCountSelector);
+    const serverRowCount = useGridSelector(apiRef, gridRowCountSelector);
+    const rowCount = rootProps.paginationMode === 'client' ? clientRowCount : serverRowCount;
     const rowCountHandle = isDetailTableCheck ?
         apiRef.current.getAllRowIds().filter(id => !id.toString().endsWith("-detail")).length
         : rowCount;

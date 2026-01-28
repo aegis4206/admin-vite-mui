@@ -43,7 +43,7 @@ const ModalTool = <T,>({ open, setOpen, children, title, onSubmit, fields = [], 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // console.log(formData)
-        if (!fieldToolRef.current?.validation()) return;
+        if (formData && !fieldToolRef.current?.validation()) return;
 
         onSubmit(event);
     };

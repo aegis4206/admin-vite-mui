@@ -42,12 +42,16 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
 
     const selectChangeHandle = (newSelectionModel: GridRowSelectionModel) => {
         if (!checkbox) return;
-        // if (!multiSelect && newSelectionModel.length > 1) {
-        //     setCheckboxSelected([newSelectionModel[1]]);
-        // } else {
-        //     setCheckboxSelected(newSelectionModel);
-        // }
-        setCheckboxSelected(newSelectionModel);
+        if (checkbox && multiSelect) {
+            setCheckboxSelected(() => {
+                const merged = new Set();
+                newSelectionModel.forEach((id) => merged.add(id));
+                return Array.from(merged) as GridRowSelectionModel;
+            });
+        } else {
+            setCheckboxSelected(newSelectionModel);
+        }
+        // setCheckboxSelected(newSelectionModel);
     }
 
     const localeText = useMemo(() => ({
@@ -184,8 +188,6 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
         return '';
     };
 
-
-
     return (
         <Box sx={{
             width: '100%',
@@ -204,7 +206,6 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                     // pagination: {
                     // showFirstButton: true,
                     // showLastButton: true,
-
                     // },
                 }}
                 slots={{
@@ -214,6 +215,7 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 checkboxSelection={checkbox}
                 onRowSelectionModelChange={!checkbox ? undefined : selectChangeHandle}
                 rowSelectionModel={!checkbox ? undefined : checkboxSelected}
+                keepNonExistentRowsSelected
                 getRowId={(row: T) => row.id || row.Id!}
                 localeText={{
                     ...localeText,

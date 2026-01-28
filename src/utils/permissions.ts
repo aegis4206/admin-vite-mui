@@ -6,7 +6,7 @@ import { BackEndMenuItem } from "../types/menu";
 export const hasPermissionForPath = (
   path: string,
   userPermissions: string[],
-  menuPermissionMap: string[]
+  menuPermissionMap: string[],
 ): boolean => {
   const requiredPermissions = menuPermissionMap.includes(path);
   if (!requiredPermissions) {
@@ -19,7 +19,7 @@ export const hasPermissionForPath = (
 export const filterMenuByPermissions = (
   menuItems: BackEndMenuItem[],
   userPermissions: string[],
-  menuPermissionMap: string[]
+  menuPermissionMap: string[],
 ): BackEndMenuItem[] => {
   return menuItems
     .map((item) => {
@@ -28,7 +28,7 @@ export const filterMenuByPermissions = (
         filteredChildren = filterMenuByPermissions(
           item.children,
           userPermissions,
-          menuPermissionMap
+          menuPermissionMap,
         );
       }
       return {
@@ -40,7 +40,7 @@ export const filterMenuByPermissions = (
       const hasPermission = hasPermissionForPath(
         item.path,
         userPermissions,
-        menuPermissionMap
+        menuPermissionMap,
       );
       return hasPermission || (item.children && item.children.length > 0);
     });
@@ -66,11 +66,12 @@ export const singularize = (word: string): string => {
   return word;
 };
 
-export const useCheckPermission = () => {
-  const loginInfo = JSON.parse(
-    localStorage.getItem("loginInfo") || "{}"
-  ) as LoginInfoType | null;
+// 將 loginInfo 緩存到模組範圍內，避免每次調用 useCheckPermission 都重新解析 localStorage
+const loginInfo = JSON.parse(
+  localStorage.getItem("loginInfo") || "{}",
+) as LoginInfoType | null;
 
+export const useCheckPermission = () => {
   const location = useLocation();
   const path = location.pathname;
 
@@ -78,7 +79,7 @@ export const useCheckPermission = () => {
 
   const permissionList = loginInfo?.user?.permissions
     ? loginInfo.user.permissions.filter((perm) =>
-        perm.startsWith(pathPermission)
+        perm.startsWith(pathPermission),
       )
     : [];
 

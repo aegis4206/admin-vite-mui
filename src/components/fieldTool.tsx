@@ -1,5 +1,5 @@
 import { Autocomplete, Divider, Grid2, IconButton, InputAdornment, MenuItem, TextField } from '@mui/material'
-import { Fragment, ReactNode, RefObject, useEffect, useImperativeHandle, useMemo, useState } from 'react'
+import { Fragment, ReactNode, RefObject, useEffect, useImperativeHandle, useState } from 'react'
 import { ModalFieldConfig } from '../types/modal';
 import dayjs from 'dayjs';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
@@ -7,28 +7,28 @@ import 'dayjs/locale/zh-tw';
 import { isPositiveInteger, isNaturalNumber } from '../utils/validate';
 import { CityList } from '../utils/cityList';
 import CustomDatePicker from './customDatePicker';
+import useDebounce from '../utils/debounce';
 
 interface FieldToolProps<T> {
     fields: ModalFieldConfig[];
     fieldsData: T;
     setFieldsData: React.Dispatch<React.SetStateAction<T>>;
+    onSearch?: () => void;
     customField?: {
         [key: string]: (fields: ModalFieldConfig, errors: Record<string, string>) => ReactNode;
     };
     ref?: RefObject<{ validation: () => boolean } | null>;
 }
 
+const errorsInit = (fields: ModalFieldConfig[]) => {
+    return fields.reduce((acc, field) => {
+        acc[field.name as string] = "";
+        return acc;
+    }, {} as Record<string, string>)
+}
 
-
-const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {}, ref }: FieldToolProps<T>) => {
-    const errorsInit = useMemo(() => {
-        return fields.reduce((acc, field) => {
-            acc[field.name as string] = "";
-            return acc;
-        }, {} as Record<string, string>)
-    }, [])
-    const [errors, setErrors] = useState<Record<string, string>>(errorsInit);
-
+const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {}, ref, onSearch }: FieldToolProps<T>) => {
+    const [errors, setErrors] = useState<Record<string, string>>(errorsInit(fields));
     const handleFieldChange = (field: ModalFieldConfig, value: number | string) => {
         if (!setFieldsData) return;
         setFieldsData((prev) => {
@@ -102,7 +102,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
 
     const validation = (): boolean => {
         if (!fieldsData) {
-            setErrors(errorsInit);
+            setErrors(errorsInit(fields));
             return false;
         }
         const err = fields.reduce((acc, field) => {
@@ -142,10 +142,13 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
 
     useEffect(() => {
         // reset
-        setErrors(errorsInit);
+        const initError = errorsInit(fields);
+        setErrors(initError);
         return () => {
         }
-    }, [fieldsData])
+    }, [fieldsData, fields]);
+
+    const debouncedColorChange = useDebounce(handleFieldChange, 300);
 
     const customTextField = (field: ModalFieldConfig, smGrid: number = 4) => {
         let sm;
@@ -170,8 +173,15 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     label={field.label}
                     name={field.name}
                     type={field.type === 'password' ? showPassword ? 'text' : 'password' : field.type}
-                    value={fieldsData[field.name as keyof T] as string | number}
+                    value={fieldsData[field.name as keyof T] ?? ''}
                     onChange={(event) => handleFieldChange(field as ModalFieldConfig, event.target.value)}
+                    onKeyUp={(e) => {
+                        if (!onSearch) return;
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            onSearch();
+                        }
+                    }}
                     fullWidth
                     disabled={field.disabled}
                     error={!!errors[field.name as string]}
@@ -266,6 +276,13 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                                             fullWidth
                                             error={!!errors[field.name as string]}
                                             helperText={errors[field.name as string]}
+                                            onKeyUp={(e) => {
+                                                if (!onSearch) return;
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    onSearch();
+                                                }
+                                            }}
                                         />
                                     )}
                                 />
@@ -440,6 +457,22 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                             )
                         }
                         break;
+                    case "color":
+                        return (
+                            <Grid2 size={{ xs: 12, sm: 4 }} key={field.name}>
+                                <TextField
+                                    sx={{ width: "100%" }}
+                                    label={field.label}
+                                    value={(fieldsData[field.name as keyof T] as string) ?? "#000000"}
+                                    onChange={(e) => {
+                                        debouncedColorChange(field, e.target.value);
+                                    }}
+                                    error={!!errors[field.name as string]}
+                                    helperText={errors[field.name as string]}
+                                    type="color"
+                                />
+                            </Grid2>
+                        );
                     default:
                         if (customField[field.name as string]) {
                             return customField[field.name as string](field, errors);

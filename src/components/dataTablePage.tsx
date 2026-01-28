@@ -13,7 +13,8 @@ import { GridApiCommunity } from '@mui/x-data-grid/internals';
 import { FaArrowDown, FaArrowUp } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { singularize, useCheckPermission } from '../utils/permissions';
-
+import { loginInfoAtom } from "../states/global";
+import { useAtom } from 'jotai';
 
 interface DataTablePageProps<T> {
     dataType: Record<string, string>;
@@ -48,6 +49,37 @@ interface DataTablePageProps<T> {
     detailAction?: boolean;
 }
 
+const customRenderersHandle = (columns: Record<string, string>, customRenderers: Record<string, GridColDef>, columnWidth: Record<string, string>) => {
+    return Object.keys(columns).map<GridColDef>((key) => {
+        let width = String(columns[key]).length * 25;
+        // 設定特定欄位 寬度
+        switch (key) {
+            case "address":
+                width = 150;
+                break;
+            case "county":
+            case "district":
+                width = 70;
+                break;
+            case "name":
+                width = 100;
+                break;
+            case "filePath":
+                width = 150;
+                break;
+        }
+        const baseCol: GridColDef = {
+            field: key,
+            headerName: columns[key],
+            // 判斷columnWidth是否存在 載入記錄寬度
+            width: columnWidth[key] ? Number(columnWidth[key]) : width,
+        };
+        return customRenderers[key]
+            ? { ...baseCol, ...customRenderers[key] }
+            : baseCol;
+    })
+}
+
 function DataTablePage<T extends TableRow>({
     dataType,
     fetchApi,
@@ -76,7 +108,6 @@ function DataTablePage<T extends TableRow>({
 }: DataTablePageProps<T>) {
     const init = useRef<boolean>(initGetData);
     const [rows, setRows] = useState<T[]>([]);
-    const [paramsData, setParamsData] = useState<Record<string, string>>({});
     const [advance, setAdvance] = useState(false);
     const [searchParams] = useSearchParams();
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>({
@@ -85,7 +116,8 @@ function DataTablePage<T extends TableRow>({
     });
     const [paginationRowCount, setPaginationRowCount] = useState(1);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const columnWidth: Record<string, string> = useMemo(() => {
+
+    const columnWidthStateHandle = () => {
         const columnWidthList = localStorage.getItem("columnWidth");
         if (columnWidthList) {
             try {
@@ -96,18 +128,18 @@ function DataTablePage<T extends TableRow>({
             }
         }
         return {};
-    }, []);
-    const loginInfo = JSON.parse(localStorage.getItem('loginInfo') || '{}');
+    }
+    const [columnWidth,] = useState<Record<string, string>>(columnWidthStateHandle);
+    const [loginInfo,] = useAtom(loginInfoAtom);
     const location = useLocation();
     const path = location.pathname;
     const checkPermission = useCheckPermission();
 
     const api = fetchApi();
     const importApi = importFileApi ? importFileApi() : undefined;
-    // 確認初始化渲染paramsData已經更新
-    const paramsDataInitCheck = Object.keys(paramsData).length > 0;
 
-    const paramFieldsHandle = useMemo(() => {
+
+    const paramFieldsStateHandle = () => {
         const tempFields = paramFields.filter((field) => field.param).
             map(field => {
                 const newField = { ...field };
@@ -133,7 +165,10 @@ function DataTablePage<T extends TableRow>({
         ] : []
 
         return [...tempFields, ...sortedFields];
-    }, []);
+    };
+
+    const [paramFieldsHandle,] = useState<ModalFieldConfig[]>(paramFieldsStateHandle);
+
 
     const paramsDataInit = useMemo(() => {
         const tempFieldsData = paramFieldsHandle.reduce((acc, field) => {
@@ -146,56 +181,42 @@ function DataTablePage<T extends TableRow>({
             sortOrder: "",
         } : {}
         return { ...tempFieldsData, ...sortFieldsData };
-    }, [paramFieldsHandle]);
+    }, [paramFieldsHandle, paginationMode]);
 
-    const searchParamsHandle = useMemo(
-        () => {
-            const params: Record<string, string> = { ...paramsDataInit };
-            if (searchParams.size > 0) {
-                searchParams.forEach((value, key) => {
-                    if (key !== "page" && key !== "size") {
-                        params[key] = value;
-                    }
-                });
-            }
-            if (Object.keys(getParams).length > 0) {
-                Object.keys(getParams).forEach((key) => {
-                    params[key] = getParams[key];
-                });
-            }
-            if (searchParams.size == 0 && Object.keys(getParams).length == 0) {
-                return paramsDataInit;
-            }
+    const searchParamsStateHandle = () => {
+        const params: Record<string, string> = { ...paramsDataInit };
+        if (searchParams.size > 0) {
+            searchParams.forEach((value, key) => {
+                if (key !== "page" && key !== "size") {
+                    params[key] = value;
+                }
+            });
+        }
+        if (Object.keys(getParams).length > 0) {
+            Object.keys(getParams).forEach((key) => {
+                params[key] = getParams[key];
+            });
+        }
+        if (searchParams.size == 0 && Object.keys(getParams).length == 0) {
+            return paramsDataInit;
+        }
 
-            return params;
-        },
-        []
-    )
+        return params;
+    }
+
+    const [searchParamsHandle, setSearchParamsHandle] = useState<Record<string, string>>(searchParamsStateHandle);
+    const paramsDataInitCheck = useRef(Object.keys(searchParamsHandle).length > 0);
+
+
 
     useEffect(() => {
-        setParamsData(searchParamsHandle);
-
         if (searchParams.size > 0 || Object.keys(getParams).length > 0) {
             setAdvance(true);
         }
 
-    }, []);
+    }, [searchParams, getParams]);
 
-    useEffect(() => {
-        if (init.current) {
-            getData(paramsDataInitCheck ? undefined : searchParamsHandle);
-        }
-
-        init.current = true;
-    }, [paginationModel]);
-
-    const paramsFilterTrim = (param: Record<string, string>) => {
-        return Object.fromEntries(
-            Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
-        )
-    };
-
-    const getData = async (param: Record<string, string> = paramsData) => {
+    const getData = async (param: Record<string, string> = searchParamsHandle) => {
         // 移除空白參數
         const filteredParams = paramsFilterTrim(param);
         if (paginationMode) {
@@ -222,52 +243,41 @@ function DataTablePage<T extends TableRow>({
         }
     };
 
+    const getDataRef = useRef(getData);
+    useEffect(() => {
+        getDataRef.current = getData;
+    });
+    useEffect(() => {
+        if (init.current) {
+            // getData(paramsDataInitCheck.current ? undefined : searchParamsHandle);
+            getDataRef.current();
+        }
+
+        init.current = true;
+    }, [paginationModel]);
+
+    const paramsFilterTrim = (param: Record<string, string>) => {
+        return Object.fromEntries(
+            Object.entries(param).filter(([, value]) => value.toString().trim() !== "")
+        )
+    };
+
+
 
     useImperativeHandle(ref, () => ({
-        getData, data: rows,
-        setData: setRows
+        getData,
     }));
 
 
 
 
-    const customRenderersHandle: (columns: Record<string, string>) => GridColDef[] = (columns) => {
-        return Object.keys(columns).map<GridColDef>((key) => {
-            let width = String(columns[key]).length * 25;
-            // 設定特定欄位 寬度
-            switch (key) {
-                case "address":
-                    width = 150;
-                    break;
-                case "county":
-                case "district":
-                    width = 70;
-                    break;
-                case "name":
-                    width = 100;
-                    break;
-                case "filePath":
-                    width = 150;
-                    break;
-            }
-            const baseCol: GridColDef = {
-                field: key,
-                headerName: dataType[key],
-                // 判斷columnWidth是否存在 載入記錄寬度
-                width: columnWidth[key] ? Number(columnWidth[key]) : width,
-            };
-            return customRenderers[key]
-                ? { ...baseCol, ...customRenderers[key] }
-                : baseCol;
-        })
-    }
 
     const columns: GridColDef[] = useMemo(() => {
         const defaultActions: GridColDef[] = viewOnly || selectMode ? [] : [
             {
                 field: 'operation',
                 headerName: '操作',
-                width: extendActions ? 150 : 150,
+                width: extendActions ? 220 : 150,
                 headerAlign: 'center',
                 sortable: false,          // 關閉排序
                 filterable: false,        // 關閉過濾
@@ -322,6 +332,7 @@ function DataTablePage<T extends TableRow>({
                                 size='small'
                                 color="secondary"
                                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
+
                             >
                                 詳細
                             </Button>
@@ -335,9 +346,9 @@ function DataTablePage<T extends TableRow>({
         return [
             ...extendColumns,
             ...defaultActions,
-            ...customRenderersHandle(dataType),
+            ...customRenderersHandle(dataType, customRenderers, columnWidth),
         ]
-    }, [customRenderers]);
+    }, [customRenderers, dataType, extendColumns, onEdit, onDelete, viewOnly, selectMode, extendActions, path, detailAction, checkPermission, columnWidth]);
 
     const onSearch = () => {
         if (paginationMode) {
@@ -352,8 +363,8 @@ function DataTablePage<T extends TableRow>({
     }
 
     const onParamsClear = () => {
-        const params = searchParamsHandle;
-        setParamsData(params);
+        const params = searchParamsStateHandle();
+        setSearchParamsHandle(params);
         if (paginationMode) {
             setPaginationModel({
                 page: 0,
@@ -388,7 +399,7 @@ function DataTablePage<T extends TableRow>({
             }
         });
         return newRows;
-    }, [expandedRowIds, rows]);
+    }, [expandedRowIds, rows, detailKey, isDetailTable]);
 
 
     const columnsDetailHandle: GridColDef[] = useMemo(() => {
@@ -410,7 +421,7 @@ function DataTablePage<T extends TableRow>({
                     }}>
                         <DataTable
                             rows={params.row.expand}
-                            columns={customRenderersHandle(detailFields)}
+                            columns={customRenderersHandle(detailFields, customRenderers, columnWidth)}
                         />
                     </Box>;
                 }
@@ -438,7 +449,7 @@ function DataTablePage<T extends TableRow>({
                 },
             } as GridColDef))
         ]
-    }, [expandedRowIds, rowsDetailHandle]);
+    }, [expandedRowIds, columns, isDetailTable, detailKey, detailFields, customRenderers, columnWidth]);
 
     // 上傳處理
     const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -460,12 +471,12 @@ function DataTablePage<T extends TableRow>({
 
     // 下載處理
     const excelDownload = async (url: string) => {
-        const searchParams = paramsFilterTrim(paramsData);
+        const searchParams = paramsFilterTrim(searchParamsHandle);
         const queryString = new URLSearchParams(searchParams).toString();
         const res = await fetch(`${import.meta.env.VITE_API_URL}/${url}${queryString ? `?${queryString}` : ''}`, {
             method: "GET",
             headers: {
-                Authorization: `Bearer ${loginInfo.token || ''}`
+                Authorization: `Bearer ${loginInfo?.token || ''}`
             }
         });
         if (!res.ok) return;
@@ -576,10 +587,11 @@ function DataTablePage<T extends TableRow>({
                         borderColor="divider"
                         p={1}
                     >
-                        {paramsDataInitCheck && <FieldTool
-                            fieldsData={paramsData}
-                            setFieldsData={setParamsData}
+                        {paramsDataInitCheck.current && <FieldTool
+                            fieldsData={searchParamsHandle}
+                            setFieldsData={setSearchParamsHandle}
                             fields={paramFieldsHandle}
+                            onSearch={onSearch}
                         />}
                     </Grid2>
                 </Collapse>

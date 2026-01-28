@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { styled } from '@mui/material/styles';
 import MuiDrawer from '@mui/material/Drawer';
 import Box from '@mui/material/Box';
@@ -17,7 +17,7 @@ import { BsTranslate } from "react-icons/bs";
 import Footer from './Footer'
 import SideBarMenu from './SideBarMenu';
 import Breadcrumbs from './Breadcrumbs';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Grid2 } from '@mui/material';
 import { drawerShowAtom } from '../states/global';
 import { useAtom } from "jotai";
@@ -120,9 +120,15 @@ export default function Dashboard(
 
   const [open, setOpen] = useAtom(drawerShowAtom);
   const { i18n } = useTranslation();
+  const init = useRef(true);
+  const location = useLocation();
 
-
-
+  useEffect(() => {
+    if (!init.current && window.innerWidth < 768) {
+      setOpen(false);
+    }
+    init.current = false;
+  }, [location.pathname, setOpen]);
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'zh' ? 'en' : 'zh');
@@ -148,10 +154,7 @@ export default function Dashboard(
     if (window.innerWidth > 768) {
       setOpen(true);
     }
-    return () => {
-
-    }
-  }, []);
+  }, [setOpen]);
 
   const toggleDrawer = () => {
     setOpen(!open);

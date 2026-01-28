@@ -12,7 +12,8 @@ export interface ModalFieldConfig {
     | "custom"
     | "address"
     | "selectWithRangeDate"
-    | "divider";
+    | "divider"
+    | "color";
   options?: { value: string | number; label: string }[];
   disabled?: boolean;
   validation?: ("isEmpty" | "isPositiveInteger" | "isNaturalNumber")[];

@@ -85,11 +85,7 @@ export default function App() {
       navigate('/login');
     }
     setLoginInfo(loginInfo as LoginInfoType)
-
-    return () => {
-
-    }
-  }, [])
+  }, [setLoginInfo, navigate]);
 
 
   return (
