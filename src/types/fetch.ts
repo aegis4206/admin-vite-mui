@@ -4,10 +4,19 @@ export interface TableRow {
   // [key: string]: unknown;
 }
 
+export interface PaginationData<T> {
+  items: T[];
+  pagination: {
+    total: number;
+    price?: string;
+  };
+}
+export type DataTableResult<T> = PaginationData<T> | T[] | T;
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
-  data?: T[] | T;
+  data?: DataTableResult<T>;
   errorCode?: number | string;
   [key: string]: unknown;
 }

@@ -28,7 +28,7 @@ const MenuItemComponent: React.FC<{
     //     return location.pathname === `/${childremItem.path}`
     // }))
     //     ;
-    const isInclude = (hasChildren || hasNoSideBarRoute) && location.pathname.includes(`${item.path}`);
+    const isInclude = (hasChildren || hasNoSideBarRoute) && (location.pathname.startsWith(`/${item.path}`) && (location.pathname.includes(`/${item.path}/`)));
     const isActive = item.path && location.pathname === `/${item.path}`;
 
     // 根據是否有子項決定是否渲染為 Menu.Item

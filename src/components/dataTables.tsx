@@ -24,10 +24,11 @@ interface DataTableProps<T extends TableRow> {
     paginationModel?: GridPaginationModel;
     setPaginationModel?: Dispatch<SetStateAction<GridPaginationModel>>
     isDetailTable?: boolean;
+    initialSelectedIds?: string[];
 }
 
-export default function DataTable<T extends TableRow>({ columns, rows, checkbox = false, multiSelect = false, gridApiRef = null, paginationMode = false, paginationRowCount = 0, paginationModel, setPaginationModel, isDetailTable }: DataTableProps<T>) {
-    const [checkboxSelected, setCheckboxSelected] = useState<GridRowSelectionModel>([]);
+export default function DataTable<T extends TableRow>({ columns, rows, checkbox = false, multiSelect = false, gridApiRef = null, paginationMode = false, paginationRowCount = 0, paginationModel, setPaginationModel, isDetailTable, initialSelectedIds = [] }: DataTableProps<T>) {
+    const [checkboxSelected, setCheckboxSelected] = useState<GridRowSelectionModel>(initialSelectedIds || []);
     // const [, setGridApiRef] = useAtom(gridApiRefAtom)
     const { t, i18n } = useTranslation();
     const tableRef: RefObject<GridApiCommunity> = useGridApiRef();
@@ -42,17 +43,18 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
 
     const selectChangeHandle = (newSelectionModel: GridRowSelectionModel) => {
         if (!checkbox) return;
-        if (checkbox && multiSelect) {
-            setCheckboxSelected(() => {
-                const merged = new Set();
-                newSelectionModel.forEach((id) => merged.add(id));
-                return Array.from(merged) as GridRowSelectionModel;
-            });
-        } else {
-            setCheckboxSelected(newSelectionModel);
-        }
-        // setCheckboxSelected(newSelectionModel);
+        // if (checkbox && multiSelect) {
+        //     setCheckboxSelected(() => {
+        //         const merged = new Set();
+        //         newSelectionModel.forEach((id) => merged.add(id));
+        //         return Array.from(merged) as GridRowSelectionModel;
+        //     });
+        // } else {
+        //     setCheckboxSelected(newSelectionModel);
+        // }
+        setCheckboxSelected(newSelectionModel);
     }
+
 
     const localeText = useMemo(() => ({
         noRowsLabel: t('dataGrid.noRowsLabel'),
@@ -213,8 +215,10 @@ export default function DataTable<T extends TableRow>({ columns, rows, checkbox 
                 }}
                 disableMultipleRowSelection={!multiSelect}
                 checkboxSelection={checkbox}
-                onRowSelectionModelChange={!checkbox ? undefined : selectChangeHandle}
-                rowSelectionModel={!checkbox ? undefined : checkboxSelected}
+                // onRowSelectionModelChange={!checkbox ? undefined : selectChangeHandle}
+                // rowSelectionModel={!checkbox ? undefined : checkboxSelected}
+                onRowSelectionModelChange={selectChangeHandle}
+                rowSelectionModel={checkboxSelected}
                 keepNonExistentRowsSelected
                 getRowId={(row: T) => row.id || row.Id!}
                 localeText={{

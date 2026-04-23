@@ -11,12 +11,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAtom } from "jotai";
 import { loginInfoAtom } from "../states/global";
-import { IconButton, InputAdornment } from '@mui/material';
+import { IconButton, InputAdornment, Typography } from '@mui/material';
 import { MdVisibility } from "react-icons/md";
 import { MdVisibilityOff } from "react-icons/md";
 import { useAuthLogin } from '../utils/fetchUrls';
 import { LoginInfoType } from '../types/System/Auth/auth';
-import logo from '../assets/react.svg';
+import logo from '../assets/logo.png';
 
 interface inputType {
     username: boolean,
@@ -133,7 +133,16 @@ export default function Login() {
                     alignItems: 'center',
                 }}
             >
-                <img src={logo} alt="Logo" />
+                <img src={logo} alt="logo" />
+                <Typography color='primary' variant='h4'
+                    sx={{
+                        width: "100%",
+                        textAlign: "center",
+                        fontSize: "2.9rem",
+                        whiteSpace: "nowrap"
+                    }}>
+                    {import.meta.env.VITE_PROJECT_NAME}
+                </Typography>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                     <TextField
                         margin="normal"

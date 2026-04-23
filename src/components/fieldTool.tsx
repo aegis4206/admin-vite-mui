@@ -43,19 +43,11 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     [field.name]: value,
                 })
             }
-            // selectWithRangeDate變化時初始化日期
-            if (field.type === "selectWithRangeDate" && field.targetSelectValue !== undefined) {
-                return ({
-                    ...tempFields,
-                    [field.startDate?.name as string]: "",
-                    [field.endDate?.name as string]: "",
-                    [field.name]: value,
-                })
-            }
+
             return ({
                 ...tempFields,
                 // 追加selectWithRangeDate處理
-                [field.name]: value === "Invalid Date" ? ((field.type === "date" || field.type === "selectWithRangeDate") ? "" : value) : value,
+                [field.name]: value === "Invalid Date" ? (field.type === "date" ? "" : value) : value,
             })
         });
     };
@@ -175,7 +167,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                     type={field.type === 'password' ? showPassword ? 'text' : 'password' : field.type}
                     value={fieldsData[field.name as keyof T] ?? ''}
                     onChange={(event) => handleFieldChange(field as ModalFieldConfig, event.target.value)}
-                    onKeyUp={(e) => {
+                    onKeyDown={(e) => {
                         if (!onSearch) return;
                         if (e.key === 'Enter') {
                             e.preventDefault();
@@ -217,7 +209,6 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                 />
             </Grid2>)
     }
-
 
     return (
         <>
@@ -276,7 +267,7 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                                             fullWidth
                                             error={!!errors[field.name as string]}
                                             helperText={errors[field.name as string]}
-                                            onKeyUp={(e) => {
+                                            onKeyDown={(e) => {
                                                 if (!onSearch) return;
                                                 if (e.key === 'Enter') {
                                                     e.preventDefault();
@@ -382,81 +373,6 @@ const FieldTool = <T,>({ fields = [], fieldsData, setFieldsData, customField = {
                                 <Divider>{field.label}</Divider>
                             </Grid2>
                         );
-                    case "selectWithRangeDate":
-                        if (field.targetSelectValue !== undefined && field.startDate && field.endDate) {
-                            return (
-                                <Fragment key={field.name}>
-                                    <Grid2 size={{ xs: 12, sm: 4 }}>
-                                        <Autocomplete
-                                            options={field.options || [{ value: '', label: field.label }]}
-                                            getOptionLabel={(option) => option.label ?? ''}
-                                            isOptionEqualToValue={(option, value) => option.value === value.value}
-                                            value={
-                                                field.options?.find(opt =>
-                                                    opt.value === fieldsData[field.name as keyof T]
-                                                ) || null
-                                            }
-                                            onChange={(_, newValue) => {
-                                                handleFieldChange(field as ModalFieldConfig, newValue?.value ?? '');
-                                            }}
-                                            renderInput={(params) => (
-                                                <TextField
-                                                    {...params}
-                                                    label={field.label}
-                                                    name={field.name}
-                                                    fullWidth
-                                                    error={!!errors[field.name as string]}
-                                                    helperText={errors[field.name as string]}
-                                                />
-                                            )}
-                                        />
-                                    </Grid2>
-                                    {fieldsData[field.name as keyof T] === field.targetSelectValue && <>
-                                        <Grid2 size={{ xs: 12, sm: 4 }}>
-                                            <CustomDatePicker
-                                                sx={{ width: "100%" }}
-                                                label={field.startDate?.label}
-                                                value={dayjs(fieldsData[field.startDate?.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.startDate?.name as keyof T] as string) : null}
-                                                onChange={(newValue) => handleFieldChange(field.startDate as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
-                                                format='YYYY-MM-DD'
-                                                slotProps={{
-                                                    field: { clearable: true },
-                                                    actionBar: { actions: ["clear", "today", "cancel", "accept"] },
-                                                    textField: {
-                                                        error: !!errors[field.startDate?.name as string],
-                                                        helperText: errors[field.startDate?.name as string],
-                                                    },
-                                                    popper: {
-                                                        placement: 'auto',
-                                                    },
-                                                }}
-                                            />
-                                        </Grid2>
-                                        <Grid2 size={{ xs: 12, sm: 4 }}>
-                                            <CustomDatePicker
-                                                sx={{ width: "100%" }}
-                                                label={field.endDate?.label}
-                                                value={dayjs(fieldsData[field.endDate?.name as keyof T] as string).isValid() ? dayjs(fieldsData[field.endDate?.name as keyof T] as string) : null}
-                                                onChange={(newValue) => handleFieldChange(field.endDate as ModalFieldConfig, dayjs(newValue).format('YYYY-MM-DD'))}
-                                                format='YYYY-MM-DD'
-                                                slotProps={{
-                                                    field: { clearable: true },
-                                                    actionBar: { actions: ["clear", "today", "cancel", "accept"] },
-                                                    textField: {
-                                                        error: !!errors[field.endDate?.name as string],
-                                                        helperText: errors[field.endDate?.name as string],
-                                                    },
-                                                    popper: {
-                                                        placement: 'auto',
-                                                    },
-                                                }}
-                                            />
-                                        </Grid2>
-                                    </>}
-                                </Fragment>
-                            )
-                        }
-                        break;
                     case "color":
                         return (
                             <Grid2 size={{ xs: 12, sm: 4 }} key={field.name}>

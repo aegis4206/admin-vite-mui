@@ -3,7 +3,7 @@ import { useState, useMemo, useImperativeHandle, RefObject, useEffect, useRef } 
 import { GridColDef, GridPaginationModel, GridRenderCellParams, GridRowId } from '@mui/x-data-grid';
 import { Box, Button, Collapse, Grid2, IconButton } from '@mui/material';
 import DataTable from './dataTables';
-import { FetchActionsType, TableRow } from '../types/fetch';
+import { FetchActionsType, PaginationData, TableRow } from '../types/fetch';
 import FieldTool from './fieldTool';
 import { ModalFieldConfig } from '../types/modal';
 import { IoMdAdd, IoMdArrowDown, IoMdArrowUp } from 'react-icons/io';
@@ -16,7 +16,7 @@ import { singularize, useCheckPermission } from '../utils/permissions';
 import { loginInfoAtom } from "../states/global";
 import { useAtom } from 'jotai';
 
-interface DataTablePageProps<T> {
+interface BaseProps<T> {
     dataType: Record<string, string>;
     fetchApi: () => FetchActionsType<T>;
     // 自定義field渲染
@@ -28,7 +28,7 @@ interface DataTablePageProps<T> {
     onDelete?: (row: T) => void;
     /** 追加extendColumns在表最前 */
     extendColumns?: GridColDef[];
-    ref?: RefObject<{ getData: (param?: Record<string, string>) => void, data?: T[], setData?: React.Dispatch<React.SetStateAction<T[]>> } | null>;
+    ref?: RefObject<{ getData: (param?: Record<string, string>) => void } | null>;
     paramFields?: ModalFieldConfig[];
     /** extendActions 非selectMode、viewOnly時 追加操作 */
     extendActions?: (params: GridRenderCellParams) => React.ReactNode;
@@ -36,7 +36,6 @@ interface DataTablePageProps<T> {
     extendButtons?: React.ReactNode;
     getParams?: Record<string, string>;
     selectMode?: boolean;
-    paginationMode?: boolean;
     multiSelect?: boolean;
     gridApiRef?: RefObject<GridApiCommunity | null> | null;
     initGetData?: boolean;
@@ -47,7 +46,21 @@ interface DataTablePageProps<T> {
     exampleUrl?: string;
     /** 詳細資料 規則 路由/id/路由_detail */
     detailAction?: boolean;
+    initialSelectedIds?: string[];
 }
+
+interface PagedProps<T> extends BaseProps<T> {
+    paginationMode: true;
+    afterMountCallback?: (data: PaginationData<T>) => void;
+}
+
+interface UnpagedProps<T> extends BaseProps<T> {
+    paginationMode?: false;
+    afterMountCallback?: (data: T[]) => void;
+}
+
+type DataTablePageProps<T> = PagedProps<T> | UnpagedProps<T>;
+
 
 const customRenderersHandle = (columns: Record<string, string>, customRenderers: Record<string, GridColDef>, columnWidth: Record<string, string>) => {
     return Object.keys(columns).map<GridColDef>((key) => {
@@ -80,6 +93,8 @@ const customRenderersHandle = (columns: Record<string, string>, customRenderers:
     })
 }
 
+
+
 function DataTablePage<T extends TableRow>({
     dataType,
     fetchApi,
@@ -105,6 +120,8 @@ function DataTablePage<T extends TableRow>({
     exportUrl,
     exampleUrl,
     detailAction = false,
+    afterMountCallback,
+    initialSelectedIds = [],
 }: DataTablePageProps<T>) {
     const init = useRef<boolean>(initGetData);
     const [rows, setRows] = useState<T[]>([]);
@@ -134,7 +151,6 @@ function DataTablePage<T extends TableRow>({
     const location = useLocation();
     const path = location.pathname;
     const checkPermission = useCheckPermission();
-
     const api = fetchApi();
     const importApi = importFileApi ? importFileApi() : undefined;
 
@@ -201,6 +217,7 @@ function DataTablePage<T extends TableRow>({
             return paramsDataInit;
         }
 
+
         return params;
     }
 
@@ -236,9 +253,17 @@ function DataTablePage<T extends TableRow>({
                         ? (result.data.pagination as { total: number }).total
                         : 1
                 );
+                if (afterMountCallback) {
+                    const callback = afterMountCallback as (data: PaginationData<T>) => void;
+                    callback(result.data as PaginationData<T>);
+                }
+
             } else {
                 setRows((result.data ?? []) as T[]);
-
+                if (afterMountCallback) {
+                    const callback = afterMountCallback as (data: T[]) => void;
+                    callback(result.data as T[]);
+                }
             }
         }
     };
@@ -267,8 +292,6 @@ function DataTablePage<T extends TableRow>({
     useImperativeHandle(ref, () => ({
         getData,
     }));
-
-
 
 
 
@@ -608,6 +631,7 @@ function DataTablePage<T extends TableRow>({
                 multiSelect={multiSelect}
                 gridApiRef={gridApiRef}
                 isDetailTable={isDetailTable}
+                initialSelectedIds={initialSelectedIds}
             />
         </>
     );

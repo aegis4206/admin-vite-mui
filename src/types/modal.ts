@@ -11,7 +11,6 @@ export interface ModalFieldConfig {
     | "password"
     | "custom"
     | "address"
-    | "selectWithRangeDate"
     | "divider"
     | "color";
   options?: { value: string | number; label: string }[];
@@ -20,9 +19,6 @@ export interface ModalFieldConfig {
   param?: boolean;
   smGrid?: number;
 
-  targetSelectValue?: string;
-  startDate?: ModalFieldConfig;
-  endDate?: ModalFieldConfig;
   // [key: string]: unknown;
 }
 

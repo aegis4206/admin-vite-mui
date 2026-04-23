@@ -120,7 +120,7 @@ function useFetchActions<T = unknown>(url: string): FetchActionsType<T> {
                     }
                     return prev - 1
                 });
-            }, 500);
+            }, method === "GET" ? 0 : 500);
         }
     }
 

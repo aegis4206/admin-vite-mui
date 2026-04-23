@@ -24,7 +24,7 @@ const initData: AuthPermissionType = {
     id: "",
     path: "",
     name: "",
-    sort: 0,
+    sort: "0",
     createdAt: "",
     updatedAt: "",
     creatorId: "",

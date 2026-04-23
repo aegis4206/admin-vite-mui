@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { LoginInfoType } from "../types/System/Auth/auth";
 import { BackEndMenuItem } from "../types/menu";
+import { useState } from "react";
 
 // 檢查使用者是否有權限訪問特定路徑
 export const hasPermissionForPath = (
@@ -67,14 +68,14 @@ export const singularize = (word: string): string => {
 };
 
 // 將 loginInfo 緩存到模組範圍內，避免每次調用 useCheckPermission 都重新解析 localStorage
-const loginInfo = JSON.parse(
+const getLoginInfo = () => JSON.parse(
   localStorage.getItem("loginInfo") || "{}",
 ) as LoginInfoType | null;
 
 export const useCheckPermission = () => {
+  const [loginInfo] = useState(getLoginInfo); // 使用lazy init防止無法取得 只在初始渲染時讀取一次
   const location = useLocation();
   const path = location.pathname;
-
   const pathPermission = path.startsWith("/") ? path.slice(1) : path;
 
   const permissionList = loginInfo?.user?.permissions
